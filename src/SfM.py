@@ -488,7 +488,7 @@ def main():
     # Double check
     print("Metashape License:", args.metashape_license)
     print("Input Directory:", args.input_dir)
-    print("Num. Files: ", os.listdir(input_dir))
+    print("Num. Files: ", len(os.listdir(input_dir)))
     print("Output Directory:", args.output_dir)
     print("Project File:", args.project_file)
     print("Quality:", args.quality)
