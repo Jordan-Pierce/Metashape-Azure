@@ -39,7 +39,7 @@ RUN python3 -m pip install --user -r requirements.txt && \
     rm -f requirements.txt
 
 # Copy over the input data
-COPY input/ /home/metashape/input/
+COPY input /home/metashape/input/
 
 # Specify the default command to run when the container starts
 CMD ["python3", "/home/metashape/SfM.py", "--config", "/home/metashape/config.ini"]

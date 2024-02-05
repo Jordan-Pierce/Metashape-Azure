@@ -467,9 +467,7 @@ def main():
     metashape_license = os.getenv("METASHAPE_LICENSE")
 
     # Accessing values in SfM
-    input_dir = os.getenv("INPUT_DIR")
-    print(os.listdir(input_dir))
-
+    input_dir = config.get('SfM', 'input_dir')
     output_dir = config.get('SfM', 'output_dir')
     project_file = config.get('SfM', 'project_file')
     quality = config.get('SfM', 'quality')
@@ -490,6 +488,7 @@ def main():
     # Double check
     print("Metashape License:", args.metashape_license)
     print("Input Directory:", args.input_dir)
+    print("Num. Files: ", os.listdir(input_dir))
     print("Output Directory:", args.output_dir)
     print("Project File:", args.project_file)
     print("Quality:", args.quality)

@@ -5,4 +5,3 @@ services:
     build: .
     environment:
       - METASHAPE_LICENSE=${METASHAPE_LICENSE}
-      - INPUT_DIR=/home/metashape/input/
