@@ -503,7 +503,7 @@ def main():
 
     with open(test_output, 'a') as file:
         # Append content to the file
-        file.write('Metashape output!')
+        file.write('This was output from the container!')
 
     print(f"TEST: {test_output} {os.path.exists(test_output)}")
 
