@@ -36,6 +36,9 @@ RUN python3 -m pip install --user -r requirements.txt && \
 
 # Store license key as environmental variable
 ENV METASHAPE_LICENSE=METASHAPE_LICENSE
+ENV INPUT_DIR=INPUT_DIR
+
+COPY input/ /home/metashape/input/
 
 # Specify the default command to run when the container starts
 CMD ["python3", "/home/metashape/SfM.py", "--config", "/home/metashape/config.ini"]

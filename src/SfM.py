@@ -415,24 +415,31 @@ def sfm(args):
 
     metashape_license = args.metashape_license
 
-    if metashape_license in ["", None]:
-        raise Exception("ERROR: You must pass in a Metashape License.")
-
     try:
+        # First, just try to activate Metashape; if the license isn't valid
+        # exit the script early.
+        if metashape_license in ["", None]:
+            raise Exception("ERROR: You must pass in a Metashape License.")
+
         # Get the Metashape License stored in the environmental variable
         print("NOTE: Activating license...")
         Metashape.License().activate(metashape_license)
 
-        # Run the workflow
+    except Exception as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
+
+    try:
+        # If the license is valid, run the workflow
         print("NOTE: Running Workflow...")
-        # sfm_workflow(args)
+        sfm_workflow(args)
 
     except Exception as e:
-        print(f"{e}\nERROR: Could not finish workflow!")
+        print(f"ERROR: Could not finish workflow!\n{e}")
         print(f"ERROR: {traceback.print_exc()}")
 
     finally:
-        # Always deactivate after script
+        # Always deactivate after script regardless
         try:
             print("NOTE: Deactivating License...")
             Metashape.License().deactivate()
@@ -460,7 +467,9 @@ def main():
     metashape_license = os.getenv("METASHAPE_LICENSE")
 
     # Accessing values in SfM
-    input_dir = config.get('SfM', 'input_dir')
+    input_dir = os.getenv("INPUT_DIR")
+    print(os.listdir(input_dir))
+
     output_dir = config.get('SfM', 'output_dir')
     project_file = config.get('SfM', 'project_file')
     quality = config.get('SfM', 'quality')
