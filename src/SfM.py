@@ -151,6 +151,9 @@ def sfm_workflow(args):
         print("Matching photos")
         print("###############################################\n")
 
+        # Detect markers (if they're there)
+        chunk.detectMarkers(type=Metashape.CircularTarget12bit)
+
         # Quality
         downscale = {"lowest": 8,
                      "low": 4,
@@ -493,6 +496,16 @@ def main():
     print("Project File:", args.project_file)
     print("Quality:", args.quality)
     print("Target Percentage:", args.target_percentage)
+
+    # Testing output and volume mount
+    os.makedirs(args.output_dir, exist_ok=True)
+    test_output = args.output_dir + "output.txt"
+
+    with open(test_output, 'a') as file:
+        # Append content to the file
+        file.write('Metashape output!')
+
+    print(f"TEST: {test_output} {os.path.exists(test_output)}")
 
     try:
         # Run the workflow

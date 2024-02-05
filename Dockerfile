@@ -29,14 +29,16 @@ EXPOSE 5053 5147
 ENV METASHAPE_LICENSE=METASHAPE_LICENSE
 ENV INPUT_DIR=INPUT_DIR
 
-# Copy the Python script and config file
-COPY src/SfM.py /home/metashape/
-COPY config.ini /home/metashape/
+# Copy requirements and install
 COPY requirements.txt /home/metashape/
 
 # Install dependencies
 RUN python3 -m pip install --user -r requirements.txt && \
     rm -f requirements.txt
+
+# Copy the Python script and config file
+COPY config.ini /home/metashape/
+COPY src/SfM.py /home/metashape/
 
 # Copy over the input data
 COPY input /home/metashape/input/
