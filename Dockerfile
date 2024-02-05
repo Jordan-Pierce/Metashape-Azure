@@ -25,12 +25,14 @@ RUN wget http://download.agisoft.com/Metashape-2.0.2-cp37.cp38.cp39.cp310.cp311-
 # expose ports for licensing
 EXPOSE 5053 5147
 
-# Python dependencies
-RUN python3 -m pip install numpy
-
 # Copy the Python script and config file
 COPY src/SfM.py /home/metashape/
 COPY config.ini /home/metashape/
+COPY requirements.txt /home/metashape/
+
+# Install dependencies
+RUN python3 -m pip install --user -r requirements.txt && \
+    rm -f requirements.txt
 
 # Store license key as environmental variable
 ENV METASHAPE_LICENSE=METASHAPE_LICENSE
