@@ -419,7 +419,7 @@ def sfm(args):
     metashape_license = args.metashape_license
 
     try:
-        # First, just try to activate Metashape; if the license isn't valid
+        # First, just try to activate Metashape; if the license isn't provided
         # exit the script early.
         if metashape_license in ["", None]:
             raise Exception("ERROR: You must pass in a Metashape License.")
