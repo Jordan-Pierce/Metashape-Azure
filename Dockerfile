@@ -32,6 +32,8 @@ RUN python3 -m pip install numpy
 COPY src/SfM.py /home/metashape/
 COPY config.ini /home/metashape/
 
+# Store license key as environmental variable
+ENV METASHAPE_LICENSE=METASHAPE_LICENSE
 
 # Specify the default command to run when the container starts
 CMD ["python3", "/home/metashape/SfM.py", "--config", "/home/metashape/config.ini"]

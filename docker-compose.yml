@@ -1,0 +1,7 @@
+version: '3'
+
+services:
+  sfm:
+    build: .
+    environment:
+      - METASHAPE_LICENSE=${METASHAPE_LICENSE}
