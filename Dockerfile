@@ -29,7 +29,7 @@ EXPOSE 5053 5147
 RUN python3 -m pip install numpy
 
 # Copy the Python script and config file
-COPY SfM.py /home/metashape/
+COPY src/SfM.py /home/metashape/
 COPY config.ini /home/metashape/
 
 
