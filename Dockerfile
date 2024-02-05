@@ -25,6 +25,10 @@ RUN wget http://download.agisoft.com/Metashape-2.0.2-cp37.cp38.cp39.cp310.cp311-
 # expose ports for licensing
 EXPOSE 5053 5147
 
+# Store license key as environmental variable
+ENV METASHAPE_LICENSE=METASHAPE_LICENSE
+ENV INPUT_DIR=INPUT_DIR
+
 # Copy the Python script and config file
 COPY src/SfM.py /home/metashape/
 COPY config.ini /home/metashape/
@@ -34,10 +38,7 @@ COPY requirements.txt /home/metashape/
 RUN python3 -m pip install --user -r requirements.txt && \
     rm -f requirements.txt
 
-# Store license key as environmental variable
-ENV METASHAPE_LICENSE=METASHAPE_LICENSE
-ENV INPUT_DIR=INPUT_DIR
-
+# Copy over the input data
 COPY input/ /home/metashape/input/
 
 # Specify the default command to run when the container starts
