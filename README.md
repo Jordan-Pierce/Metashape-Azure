@@ -7,8 +7,8 @@
 # Pull the repo
 git clone https://github.com/Jordan-Pierce/Metashape-Azure.git
 ```
-In the `docker-compose.yml` file, or as local variable (`METASHAPE_LICENSE`), provide a `Metashape 
-Professional`license. 
+In the `docker-compose.yml` file, or as local variable (`METASHAPE_LICENSE`), provide a `Metashape
+Professional` license. 
 
 ### I/O
 `./input` - (Copied over) Where all images of a scene should be  
