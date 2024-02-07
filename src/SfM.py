@@ -152,7 +152,7 @@ def sfm_workflow(args):
         print("###############################################\n")
 
         # Detect markers (if they're there)
-        chunk.detectMarkers(type=Metashape.CircularTarget12bit)
+        chunk.detectMarkers(target_type=Metashape.CircularTarget12bit)
 
         # Quality
         downscale = {"lowest": 8,
@@ -501,8 +501,8 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
     test_output = args.output_dir + "output.txt"
 
-    with open(test_output, 'a') as file:
-        # Append content to the file
+    with open(test_output, 'w') as file:
+        # Write content to the file
         file.write('This was output from the container!')
 
     print(f"TEST: {test_output} {os.path.exists(test_output)}")
