@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.8.0-base-ubuntu22.04
+FROM nvidia/cuda:11.0.3-base-ubuntu20.04
 
 # Install pip for python3, mesa deb for metashape, nodejs
 RUN apt update && \
