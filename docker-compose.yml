@@ -4,6 +4,7 @@ services:
   sfm:
     build: .
     environment:
-      - METASHAPE_LICENSE=${METASHAPE_LICENSE}
+      - METASHAPE_LICENSE=AV28D-AOFZ9-GHJZ8-2APH5-BXL25 
+#${METASHAPE_LICENSE}
     volumes:
       - "./output/:/home/metashape/output/"

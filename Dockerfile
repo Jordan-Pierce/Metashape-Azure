@@ -40,8 +40,10 @@ RUN python3 -m pip install --user -r requirements.txt && \
 COPY config.ini /home/metashape/
 COPY src/SfM.py /home/metashape/
 
+#TODO delete line 46 and add a python module to mount the storage inside a wrapper script for SFM.py
+
 # Copy over the input data
-COPY input /home/metashape/input/
+#COPY input /home/metashape/input/
 
 # Specify the default command to run when the container starts
 CMD ["python3", "/home/metashape/SfM.py", "--config", "/home/metashape/config.ini"]

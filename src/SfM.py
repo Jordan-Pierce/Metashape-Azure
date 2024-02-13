@@ -9,7 +9,7 @@ import configparser
 import numpy as np
 
 import Metashape
-
+from announcement import announce
 # from Common import print_progress
 
 # Check that the Metashape version is compatible with this script
@@ -455,6 +455,36 @@ def sfm(args):
             print("ERROR: License was not deactivated; do not delete compute without Deactivating!")
 
 
+def test_license(args):
+    metashape_license = args.metashape_license
+
+    try:
+        # First, just try to activate Metashape; if the license isn't provided
+        # exit the script early.
+        if metashape_license in ["", None]:
+            raise Exception("ERROR: You must pass in a Metashape License.")
+
+        # Get the Metashape License stored in the environmental variable
+        print("NOTE: Activating license...")
+        Metashape.License().activate(metashape_license)
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        sys.exit(1)
+
+    finally:
+        # Always deactivate after script regardless
+        try:
+            print("NOTE: Deactivating License...")
+            Metashape.License().deactivate()
+        except:
+            pass
+
+        if not Metashape.License().valid:
+            print("NOTE: License deactivated or was not active to begin with.")
+        else:
+            print("ERROR: License was not deactivated; do not delete compute without Deactivating!")
+
 # -----------------------------------------------------------------------------
 # Main Function
 # -----------------------------------------------------------------------------
@@ -491,7 +521,7 @@ def main():
     # Double check
     print("Metashape License:", args.metashape_license)
     print("Input Directory:", args.input_dir)
-    print("Num. Files: ", len(os.listdir(input_dir)))
+    #print("Num. Files: ", len(os.listdir(input_dir)))
     print("Output Directory:", args.output_dir)
     print("Project File:", args.project_file)
     print("Quality:", args.quality)
@@ -508,9 +538,14 @@ def main():
     print(f"TEST: {test_output} {os.path.exists(test_output)}")
 
     try:
+        announce("Activating License")
+        test_license(args)
+        announce("End of License Test")
+        
         # Run the workflow
-        sfm(args)
-        print("Completed SfM Workflow!.\n")
+        
+        #sfm(args)
+        #print("Completed SfM Workflow!.\n")
 
     except Exception as e:
         print(f"ERROR: {e}")
