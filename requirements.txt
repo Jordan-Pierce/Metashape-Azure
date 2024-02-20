@@ -1,1 +1,2 @@
-numpy
+./Metashape-2.0.2-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl
+numpy==1.24.4
