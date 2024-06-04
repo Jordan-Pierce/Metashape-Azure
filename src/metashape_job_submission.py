@@ -83,8 +83,8 @@ def submit_metashape_job(input_asset: str = None,
 
     #create linux command line commands to be sent to the compute target
     transfer_data = command(
-        code = './',
-        command = 'cp -r ${{inputs.input_data}} /home/metashape/input && python SfM.py '+LICENSE+' && cp -r /home/metashape/output ${{outputs.output_data}}',
+        code = './SfM.py',
+        command = f'python SfM.py {LICENSE} ${{inputs.input_data}} ${{outputs.output_data}}',
         inputs = input,
         outputs = output,
         environment = 'metashape-env@latest',

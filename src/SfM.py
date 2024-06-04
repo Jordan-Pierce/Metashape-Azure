@@ -20,8 +20,8 @@ finally:
     pass
 
 # from Common import print_progress
-
 # Check that the Metashape version is compatible with this script
+
 compatible_major_version = "2.0"
 found_major_version = ".".join(Metashape.app.version.split('.')[:2])
 if found_major_version != compatible_major_version:
@@ -414,7 +414,7 @@ def sfm(args):
 
     except Exception as e:
         print(f"ERROR: {e}")
-        sys.exit(1)
+        raise(e)
 
     try:
         # If the license is valid, run the workflow
@@ -472,7 +472,7 @@ def test_license(args):
 # -----------------------------------------------------------------------------
 # Main Function
 # -----------------------------------------------------------------------------
-def main(license:str = None):
+def main(license:str = None, input_path:str = None, output_path:str = None):
     """
 
     """
@@ -485,8 +485,8 @@ def main(license:str = None):
 
     # Accessing values in SfM
     
-    input_dir = config.get('SfM', 'input_dir')
-    output_dir = config.get('SfM', 'output_dir')
+    input_dir = input_path
+    output_dir = output_path
     project_file = config.get('SfM', 'project_file')
     quality = config.get('SfM', 'quality')
     target_percentage = config.get('SfM', 'target_percentage')
@@ -549,5 +549,7 @@ if __name__ == '__main__':
    
     #assumes passing of license as a command line argument    
     args = sys.argv[1:]
-    main(license = args[0])
+        
+    main(license = args[0], input_path = args[1], output_path = args[2])
+
     
