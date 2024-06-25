@@ -17,14 +17,13 @@ def submit_metashape_job(input_asset: str = None,
                          output_asset: str = None,
                          output_version: str = None,
                          device: int = None,
+                         quality: str = 'high',
+                         target_percent: int = 75,
                          compute_target: str = None):
     # get default creds
     creds = DefaultAzureCredential()
     # use creds to make a client
     local_client = MLClient.from_config(credential=creds)
-
-    # load the metashape project path (.psx)
-    # TODO
 
     # load in the input data information from the function def
     input_asset_name = input_asset
@@ -45,6 +44,12 @@ def submit_metashape_job(input_asset: str = None,
 
     # get the device number where it needs to be
     DEVICE = device
+    QUALITY = quality
+    TAR_PERCENT = target_percent
+
+    # TODO Pass the project file (PSX) file to SfM.py
+    # PROJECT_FILE = ...
+    # If passed an empty string, class methods will deal with it
 
     # make sure the data types are the same
     data_type = local_client.data.get(name=input_asset_name, version=input_asset_version).type
@@ -79,10 +84,19 @@ def submit_metashape_job(input_asset: str = None,
                               )
     }
 
+    cmd = (f'python '
+           f'SfM.py '
+           f'{DEVICE} '
+           f'${{inputs.input_data}} '
+           # TODO ??? {PROJECT_FILE} ??? 
+           f'${{outputs.output_data}} '
+           f'{QUALITY} '
+           f'{TAR_PERCENT}')
+
     # create linux command line commands to be sent to the compute target
     transfer_data = command(
         code='./SfM.py',
-        command=f'python SfM.py {DEVICE} ${{inputs.input_data}} ${{outputs.output_data}}',
+        command=cmd,
         inputs=input,
         outputs=output,
         environment='metashape-env@latest',

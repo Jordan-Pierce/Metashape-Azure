@@ -34,7 +34,6 @@ RUN python3 -m pip install --user -r requirements.txt && \
 EXPOSE 5053 5147
 
 # Copy the Python script and config file
-COPY config.ini /home/metashape/
 COPY src/SfM.py /home/metashape/
 
 # Copy over the input data
