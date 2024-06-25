@@ -424,7 +424,6 @@ def main(device: str = None, project_file: str = None, input_path: str = None, o
         raise Exception(f"ERROR: Invalid value for 'device'")
 
     # Get the configuration file
-    # TODO This might be removed
     config = configparser.ConfigParser()
     config.read('/home/metashape/config.ini')
 
@@ -444,9 +443,7 @@ def main(device: str = None, project_file: str = None, input_path: str = None, o
     args.input_dir = input_dir
     args.output_dir = output_dir
     args.project_file = project_file
-
     args.device = device
-
     args.quality = quality
     args.target_percentage = int(target_percentage)
 
@@ -472,7 +469,8 @@ def main(device: str = None, project_file: str = None, input_path: str = None, o
 
 
 if __name__ == '__main__':
-    # TODO How is the project file (.psx) getting here?
-    args = sys.argv
-    main(device=args[1], project_file=args[2], input_path=args[3], output_path=args[4])
+    # Parse all but the first argument
+    _, device, project_file, input_path, output_path = sys.argv
+    # Call the main function to kick off the workflow
+    main(device=device, project_file=project_file, input_path=input_path, output_path=output_path)
 
