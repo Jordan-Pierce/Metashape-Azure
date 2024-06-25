@@ -114,7 +114,7 @@ def find_files(folder: str, types: list):
 class SfMWorkflow:
     def __init__(self, device, input_dir, project_file, output_dir, quality='high', target_percentage=75):
 
-        # Ensure the license is activate
+        # Ensure the license is activated
         self.validate_license()
 
         # Set the device index
