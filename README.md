@@ -7,6 +7,12 @@ git clone https://github.com/Jordan-Pierce/Metashape-Azure.git
 ```
 
 ```python
+# TODO Update Scripts to use FLS
+import os
+os.environ['AGISOFT_FLS'] = "host:port"
+import Metashape [2.1.2]
+Metashape.License().borrow(N)
+
 # SfM.py
 
 if __name__ == '__main__':
@@ -18,6 +24,7 @@ if __name__ == '__main__':
          sys.argv[5],  # Quality                'high'
          sys.argv[6])  # Target Percentage      75
 
+    Metashape.License().returnLicense()
 ```
 
 ### Notes
