@@ -1,5 +1,7 @@
 {
-    "subscription_id": "737b86ee-60d4-40ce-bb2f-11f4ef6f4f8c",
-    "resource_group": "nccos-rg-machinelearning-prod-e2",
-    "workspace_name": "nccos-ws-dev-e2"
+
+    "subscription_id": "",
+    "resource_group": "",
+    "workspace_name": ""
+
 }

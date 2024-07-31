@@ -96,4 +96,3 @@ def submit_metashape_job(input_asset: str = None,
     #submit the job to the compute through the client
     returned_job = local_client.jobs.create_or_update(transfer_data)
     returned_job.studio_url
-

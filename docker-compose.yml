@@ -3,7 +3,15 @@ version: '3'
 services:
   sfm:
     build: .
+    ports:
+      - "5842:5842/udp"
+      - "5353:5353/udp"
     environment:
-      - METASHAPE_LICENSE=""
+      - AGISOFT_FLS: 10.71.68.13:5842
+#${METASHAPE_LICENSE}
     volumes:
       - "./output/:/home/metashape/output/"
+networks:
+  default:
+    name: nccos-vnet-a-eastus2/nccos-subnet-a-devops-e2
+      external: True
