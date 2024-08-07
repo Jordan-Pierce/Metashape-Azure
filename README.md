@@ -7,7 +7,6 @@ git clone https://github.com/Jordan-Pierce/Metashape-Azure.git
 ```
 
 ```python
-# TODO Update Scripts to use FLS
 import os
 os.environ['AGISOFT_FLS'] = "host:port"
 import Metashape [2.1.2]

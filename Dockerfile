@@ -18,8 +18,8 @@ USER metashape
 # set The workdir
 WORKDIR /home/metashape
 
-# install metashape python headless 2.0.2
-RUN wget http://download.agisoft.com/Metashape-2.0.2-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl -P /home/metashape
+# install metashape python headless 2.1.2
+RUN wget http://download.agisoft.com/Metashape-2.1.2-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl -P /home/metashape
 
 # Copy requirements and install
 COPY requirements.txt /home/metashape/
@@ -27,7 +27,7 @@ COPY requirements.txt /home/metashape/
 # Install dependencies
 RUN python3 -m pip install --user -r requirements.txt && \
     rm -f requirements.txt && \
-    rm -f Metashape-2.0.2-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl && \
+    rm -f Metashape-2.1.2-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl && \
     pip list
 
 # expose ports for licensing
