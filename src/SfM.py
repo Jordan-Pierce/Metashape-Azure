@@ -491,5 +491,3 @@ if __name__ == '__main__':
          sys.argv[4],  # Output Path
          sys.argv[5],  # Quality
          sys.argv[6])  # Target Percentage
-
-
