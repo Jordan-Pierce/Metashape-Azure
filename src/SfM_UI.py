@@ -1,6 +1,8 @@
 from SfM import Metashape
 from SfM import SfMWorkflow
 
+from PySide2 import QtWidgets
+
 
 class SfMWorkflowApp(QtWidgets.QDialog):
     def __init__(self, parent):
