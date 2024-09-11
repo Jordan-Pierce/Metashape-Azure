@@ -3,3 +3,5 @@ numpy==1.24.4
 azure-cli
 azure-identity
 azure-ai-ml
+numpy==1.24.4
+pyqt5

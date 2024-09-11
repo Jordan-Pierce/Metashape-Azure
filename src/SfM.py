@@ -19,10 +19,10 @@ except Exception as e:
 
 # Check that the Metashape version is compatible with this script
 compatible_version = "2.0.2"
-found_version = Metashape.app.version
+found_version = str(Metashape.app.version)
 
 if found_version != compatible_version:
-    raise Exception("Incompatible Metashape version: {} != {}".format(found_version, compatible_version))
+    raise Exception(f"Found version {found_version}, but expecting {compatible_version}")
 
 
 # -----------------------------------------------------------------------------------------------------------
