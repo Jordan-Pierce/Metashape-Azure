@@ -1,15 +1,16 @@
+import datetime
 import os
 import sys
 import time
-import datetime
 import traceback
+from packaging import version
 
 import numpy as np
-
 
 # -----------------------------------------------------------------------------------------------------------
 # Version Checks
 # -----------------------------------------------------------------------------------------------------------
+
 
 try:
     import Metashape
@@ -18,11 +19,11 @@ except Exception as e:
     raise Exception(f'ERROR: {e}')
 
 # Check that the Metashape version is compatible with this script
-compatible_version = "2.0.2"
-found_version = str(Metashape.app.version)
+compatible_version = version.parse("2.1.2")
+found_version = version.parse(str(Metashape.app.version))
 
-if found_version != compatible_version:
-    raise Exception(f"Found version {found_version}, but expecting {compatible_version}")
+if found_version < compatible_version:
+    raise Exception(f"Found version {found_version}, but expecting at least {compatible_version}")
 
 
 # -----------------------------------------------------------------------------------------------------------
@@ -115,12 +116,14 @@ class SfMWorkflow:
     def __init__(self, device, input_dir, project_file, output_dir, quality='high', target_percentage=75):
 
         # Ensure the license is activated
+        self.borrow_license()
         self.validate_license()
 
         # Set the device index
         self.device = int(device)
 
         # Check that input directory exists
+        # Comes in as a file path as a string
         if os.path.exists(input_dir):
             self.input_dir = input_dir
         else:
@@ -134,7 +137,7 @@ class SfMWorkflow:
             self.project_file = f"{self.input_dir}/project.psx"
 
         # Create the output directory
-        self.output_dir = f"{output_dir}/"
+        self.output_dir = f"{output_dir}/{get_now()}"
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Create filenames for data outputs
@@ -168,6 +171,29 @@ class SfMWorkflow:
         if self.doc.chunk is None:
             self.doc.addChunk()
             self.doc.save()
+
+        # TODO replace with specific workflow
+        self.run_workflow()
+
+    def borrow_license(self):
+        """
+
+        """
+        try:
+            Metashape.License().borrowLicense(3600)
+            print("NOTE: License borrowed successfully")
+        except Exception as e:
+            Exception(f"ERROR: Could not borrow license: {e}")
+
+    def return_license(self):
+        """
+
+        """
+        try:
+            Metashape.License().returnLicense()
+            print("NOTE: License returned successfully")
+        except Exception as e:
+            print(f"ERROR: Could not return license: {e}")
 
     def validate_license(self):
         """
@@ -433,7 +459,7 @@ class SfMWorkflow:
         print("Process Successful!")
         self.doc.save()
 
-    def run(self):
+    def run_workflow(self):
         """
 
         """
@@ -459,35 +485,28 @@ class SfMWorkflow:
         print(f"NOTE: Completed in {np.around(((time.time() - t0) / 60), 2)} minutes")
         self.doc.save()
 
+        # Return the license
+        self.return_license()
 
-# -----------------------------------------------------------------------------
-# Main Function
-# -----------------------------------------------------------------------------
 
-def main(device, input_path, project_file, output_path, quality, target_percentage):
-    """
+# ----------------------------------------------------------------------------------------------------------------------
+# Main
+# ----------------------------------------------------------------------------------------------------------------------
 
-    """
+if __name__ == '__main__':
+    device = None
+    input_path = sys.argv[1]
+    output_path = sys.argv[2]
+    print(input_path)
 
     try:
-        workflow = SfMWorkflow(device=device,
+        workflow = SfMWorkflow(device=0,
                                input_dir=input_path,
-                               project_file=project_file,
+                               project_file="",
                                output_dir=output_path,
-                               quality=quality,
-                               target_percentage=target_percentage)
-        workflow.run()
+                               quality="medium",
+                               target_percentage=75)
 
     except Exception as e:
         print(f"ERROR: {e}")
         print(traceback.print_exc())
-
-
-if __name__ == '__main__':
-
-    main(sys.argv[1],  # Device
-         sys.argv[2],  # Input Path
-         sys.argv[3],  # Project File
-         sys.argv[4],  # Output Path
-         sys.argv[5],  # Quality
-         sys.argv[6])  # Target Percentage
