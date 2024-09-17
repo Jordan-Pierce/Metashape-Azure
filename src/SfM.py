@@ -1,11 +1,11 @@
+import argparse
 import datetime
 import os
-import sys
 import time
 import traceback
-from packaging import version
 
 import numpy as np
+from packaging import version
 
 # -----------------------------------------------------------------------------------------------------------
 # Version Checks
@@ -113,7 +113,10 @@ def find_files(folder: str, types: list):
 # -----------------------------------------------------------------------------------------------------------
 
 class SfMWorkflow:
-    def __init__(self, device, input_dir, project_file, output_dir, quality='high', target_percentage=75):
+    def __init__(self, device, input_dir, project_file, output_dir, quality='high', target_percentage=75,
+                 add_photos=True, align_cameras=True, optimize_cameras=True, build_depth_maps=True,
+                 build_point_cloud=True, build_dem=True, build_ortho=True, export_cameras=True,
+                 export_point_cloud=True, export_dem=True, export_ortho=True, export_report=True):
 
         # Ensure the license is activated
         self.borrow_license()
@@ -123,21 +126,13 @@ class SfMWorkflow:
         self.device = int(device)
 
         # Check that input directory exists
-        # Comes in as a file path as a string
         if os.path.exists(input_dir):
             self.input_dir = input_dir
         else:
             raise Exception("ERROR: Input directory provided doesn't exist; please check input")
 
-        # If user passes a previous project file, use it
-        if os.path.exists(project_file):
-            self.project_file = project_file
-        else:
-            # Create a new one inside the input directory
-            self.project_file = f"{self.input_dir}/project.psx"
-
         # Create the output directory
-        self.output_dir = f"{output_dir}/{get_now()}"
+        self.output_dir = f"{input_dir}/{get_now()}"
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Create filenames for data outputs
@@ -158,8 +153,10 @@ class SfMWorkflow:
         Metashape.app.gpu_mask = get_gpu_mask(device=self.device)
         self.doc = Metashape.Document()
 
+        self.project_file = "project.psx"
         if not os.path.exists(self.project_file):
             print(f"NOTE: Creating new project file")
+            self.project_file = f"{self.output_dir}/project.psx"
             self.doc.save(self.project_file)
         else:
             print(f"NOTE: Opening existing project file")
@@ -172,7 +169,21 @@ class SfMWorkflow:
             self.doc.addChunk()
             self.doc.save()
 
-        # TODO replace with specific workflow
+        # Store the boolean parameters
+        self.add_photos_flag = add_photos
+        self.align_cameras_flag = align_cameras
+        self.optimize_cameras_flag = optimize_cameras
+        self.build_depth_maps_flag = build_depth_maps
+        self.build_point_cloud_flag = build_point_cloud
+        self.build_dem_flag = build_dem
+        self.build_ortho_flag = build_ortho
+        self.export_cameras_flag = export_cameras
+        self.export_point_cloud_flag = export_point_cloud
+        self.export_dem_flag = export_dem
+        self.export_ortho_flag = export_ortho
+        self.export_report_flag = export_report
+
+        # Run the workflow
         self.run_workflow()
 
     def borrow_license(self):
@@ -460,25 +471,80 @@ class SfMWorkflow:
         self.doc.save()
 
     def run_workflow(self):
-        """
-
-        """
         announce("Structure from Motion")
         t0 = time.time()
 
-        self.add_photos()
-        self.align_cameras()
-        self.optimize_cameras()
-        self.build_depth_maps()
-        self.build_point_cloud()
-        self.build_dem()
-        self.build_ortho()
+        if self.add_photos_flag:
+            try:
+                self.add_photos()
+            except Exception as e:
+                print(f"ERROR in add_photos: {e}")
 
-        self.export_cameras()
-        self.export_point_cloud()
-        self.export_dem()
-        self.export_ortho()
-        self.export_report()
+        if self.align_cameras_flag:
+            try:
+                self.align_cameras()
+            except Exception as e:
+                print(f"ERROR in align_cameras: {e}")
+
+        if self.optimize_cameras_flag:
+            try:
+                self.optimize_cameras()
+            except Exception as e:
+                print(f"ERROR in optimize_cameras: {e}")
+
+        if self.build_depth_maps_flag:
+            try:
+                self.build_depth_maps()
+            except Exception as e:
+                print(f"ERROR in build_depth_maps: {e}")
+
+        if self.build_point_cloud_flag:
+            try:
+                self.build_point_cloud()
+            except Exception as e:
+                print(f"ERROR in build_point_cloud: {e}")
+
+        if self.build_dem_flag:
+            try:
+                self.build_dem()
+            except Exception as e:
+                print(f"ERROR in build_dem: {e}")
+
+        if self.build_ortho_flag:
+            try:
+                self.build_ortho()
+            except Exception as e:
+                print(f"ERROR in build_ortho: {e}")
+
+        if self.export_cameras_flag:
+            try:
+                self.export_cameras()
+            except Exception as e:
+                print(f"ERROR in export_cameras: {e}")
+
+        if self.export_point_cloud_flag:
+            try:
+                self.export_point_cloud()
+            except Exception as e:
+                print(f"ERROR in export_point_cloud: {e}")
+
+        if self.export_dem_flag:
+            try:
+                self.export_dem()
+            except Exception as e:
+                print(f"ERROR in export_dem: {e}")
+
+        if self.export_ortho_flag:
+            try:
+                self.export_ortho()
+            except Exception as e:
+                print(f"ERROR in export_ortho: {e}")
+
+        if self.export_report_flag:
+            try:
+                self.export_report()
+            except Exception as e:
+                print(f"ERROR in export_report: {e}")
 
         announce("Workflow Completed")
         print(f"NOTE: Processing finished, results saved to {self.output_dir}")
@@ -493,20 +559,84 @@ class SfMWorkflow:
 # Main
 # ----------------------------------------------------------------------------------------------------------------------
 
-if __name__ == '__main__':
-    device = None
-    input_path = sys.argv[1]
-    output_path = sys.argv[2]
-    print(input_path)
+def main():
+    parser = argparse.ArgumentParser(description='Run the Structure from Motion workflow.')
+    parser.add_argument('input_path', type=str,
+                        help='Path to the input directory')
+
+    parser.add_argument('output_path', type=str,
+                        help='Path to the output directory')
+
+    parser.add_argument('--device', type=int, default=0,
+                        help='GPU device index (default: 0)')
+
+    parser.add_argument('--quality', type=str, default='medium',
+                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
+                        help='Quality of the workflow (default: medium)')
+
+    parser.add_argument('--target_percentage', type=int, default=75,
+                        help='Target percentage for optimization (default: 75)')
+
+    parser.add_argument('--add_photos', action='store_true',
+                        help='Add photos to the project')
+
+    parser.add_argument('--align_cameras', action='store_true',
+                        help='Align cameras')
+
+    parser.add_argument('--optimize_cameras', action='store_true',
+                        help='Optimize cameras')
+
+    parser.add_argument('--build_depth_maps', action='store_true',
+                        help='Build depth maps')
+
+    parser.add_argument('--build_point_cloud', action='store_true',
+                        help='Build point cloud')
+
+    parser.add_argument('--build_dem', action='store_true',
+                        help='Build DEM')
+
+    parser.add_argument('--build_ortho', action='store_true',
+                        help='Build orthomosaic')
+
+    parser.add_argument('--export_cameras', action='store_true',
+                        help='Export cameras')
+
+    parser.add_argument('--export_point_cloud', action='store_true',
+                        help='Export point cloud')
+
+    parser.add_argument('--export_dem', action='store_true',
+                        help='Export DEM')
+
+    parser.add_argument('--export_ortho', action='store_true',
+                        help='Export orthomosaic')
+
+    parser.add_argument('--export_report', action='store_true',
+                        help='Export report')
+
+    args = parser.parse_args()
 
     try:
-        workflow = SfMWorkflow(device=0,
-                               input_dir=input_path,
+        workflow = SfMWorkflow(device=args.device,
+                               input_dir=args.input_path,
                                project_file="",
-                               output_dir=output_path,
-                               quality="medium",
-                               target_percentage=75)
-
+                               output_dir=args.output_path,
+                               quality=args.quality,
+                               target_percentage=args.target_percentage,
+                               add_photos=args.add_photos,
+                               align_cameras=args.align_cameras,
+                               optimize_cameras=args.optimize_cameras,
+                               build_depth_maps=args.build_depth_maps,
+                               build_point_cloud=args.build_point_cloud,
+                               build_dem=args.build_dem,
+                               build_ortho=args.build_ortho,
+                               export_cameras=args.export_cameras,
+                               export_point_cloud=args.export_point_cloud,
+                               export_dem=args.export_dem,
+                               export_ortho=args.export_ortho,
+                               export_report=args.export_report)
     except Exception as e:
         print(f"ERROR: {e}")
         print(traceback.print_exc())
+
+if __name__ == '__main__':
+    main()

@@ -13,8 +13,9 @@ from azure.identity import InteractiveBrowserCredential
 from SfM import Metashape
 from SfM import SfMWorkflow
 
-# Duly noted that the following warnings are suppressed for the purpose of this script
-warnings.filterwarnings("ignore")
+# Suppress specific warnings
+warnings.filterwarnings("ignore", category=UserWarning, message=".*experimental class.*")
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*deprecated.*")
 
 
 class SfMWorkflowApp(QDialog):
@@ -122,7 +123,7 @@ class SfMWorkflowApp(QDialog):
 
         ###
         # Input & Output Directory
-        io_group = QGroupBox("Input & Output")
+        io_group = QGroupBox("Input / Output")
         io_layout = QVBoxLayout()
 
         description = QLabel("Select the input and output directories below")
@@ -262,7 +263,6 @@ class SfMWorkflowApp(QDialog):
         if file_name:
             self.sfm_script_path_label.setText(file_name)  # Update the label with the selected file path
 
-
     def choose_input_directory(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Input Directory")
         if directory:
@@ -339,13 +339,34 @@ class SfMWorkflowApp(QDialog):
 
     def get_azure_compute_names(self):
         """Method to fill the computes dropdown with a list of compute options."""
-        # Clear the current list of compute options
         self.computes_input.clear()
         try:
-            compute_names = [compute.name for compute in self.ml_client.compute.list()]
-            self.computes_input.addItems(compute_names)
+            compute_list = list(self.ml_client.compute.list())
+            for compute in compute_list:
+                self.computes_input.addItem(f"{compute.name}")
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
+
+    def get_compute_status(self, compute):
+        """Get the status of a compute instance."""
+        try:
+            # Check the provisioning state
+            provisioning_state = getattr(compute, 'provisioning_state', None)
+            print(compute.status)
+            if provisioning_state:
+                if provisioning_state.lower() == 'succeeded':
+                    # Check if the compute is running
+                    if hasattr(compute, 'status') and compute.status.lower() == 'running':
+                        return "Running"
+                    else:
+                        return "Stopped"
+                else:
+                    return provisioning_state
+
+            # If no provisioning state found, return unknown status
+            return "Unknown status"
+        except Exception as e:
+            return f"Error: {str(e)}"
 
     def get_azure_compute(self):
         """Method to get the selected compute option."""
@@ -371,7 +392,6 @@ class SfMWorkflowApp(QDialog):
             self.input_dir = self.extract_input_value()
             self.output_dir = self.extract_output_value()
 
-            # TODO Change
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
 
@@ -402,7 +422,19 @@ class SfMWorkflowApp(QDialog):
                                    project_file="",
                                    output_dir=self.output_dir,
                                    quality=self.quality,
-                                   target_percentage=self.target_percentage)
+                                   target_percentage=self.target_percentage,
+                                   add_photos=self.building_functions['add_photos'].isChecked(),
+                                   align_cameras=self.building_functions['align_cameras'].isChecked(),
+                                   optimize_cameras=self.building_functions['optimize_cameras'].isChecked(),
+                                   build_depth_maps=self.building_functions['build_depth_maps'].isChecked(),
+                                   build_point_cloud=self.building_functions['build_point_cloud'].isChecked(),
+                                   build_dem=self.building_functions['build_dem'].isChecked(),
+                                   build_ortho=self.building_functions['build_ortho'].isChecked(),
+                                   export_cameras=self.export_functions['export_cameras'].isChecked(),
+                                   export_point_cloud=self.export_functions['export_point_cloud'].isChecked(),
+                                   export_dem=self.export_functions['export_dem'].isChecked(),
+                                   export_ortho=self.export_functions['export_ortho'].isChecked(),
+                                   export_report=self.export_functions['export_report'].isChecked())
 
             for function_name, checkbox in self.building_functions.items():
                 if checkbox.isChecked():
@@ -455,9 +487,26 @@ class SfMWorkflowApp(QDialog):
             }
 
             # create linux command line commands to be sent to the compute target
+            command_args = [
+                f'python SfM.py ${{inputs.input_data}} ${{outputs.output_data}}',
+                f'--device {self.device_input.value()}',
+                f'--quality {self.quality_input.currentText()}',
+                f'--target_percentage {self.target_percentage_input.value()}'
+            ]
+
+            for function_name, checkbox in self.building_functions.items():
+                if checkbox.isChecked():
+                    command_args.append(f'--{function_name}')
+
+            for function_name, checkbox in self.export_functions.items():
+                if checkbox.isChecked():
+                    command_args.append(f'--{function_name}')
+
+            command_str = ' '.join(command_args)
+
             transfer_data = command(
                 code=sfm_script_path,
-                command=f'python SfM.py ${{inputs.input_data}} ${{outputs.output_data}}',
+                command=command_str,
                 inputs=input,
                 outputs=output,
                 environment="metashape-env@latest",
@@ -466,6 +515,7 @@ class SfMWorkflowApp(QDialog):
 
             # submit the job to the compute through the client
             returned_job = self.ml_client.jobs.create_or_update(transfer_data)
+            print(f"STATUS: {returned_job.studio_url}")
 
         except Exception as e:
             print(f"ERROR: {e}")
