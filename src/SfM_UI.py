@@ -61,6 +61,16 @@ class SfMWorkflowApp(QDialog):
     def initUI(self):
         layout = QVBoxLayout(self)
 
+        self.tab_widget = QTabWidget(self)
+        self.azure_tab = QWidget()
+        self.local_tab = QWidget()
+
+        self.tab_widget.addTab(self.azure_tab, "Azure")
+        self.tab_widget.addTab(self.local_tab, "Local")
+
+        azure_layout = QVBoxLayout(self.azure_tab)
+        local_layout = QVBoxLayout(self.local_tab)
+
         ###
         # SfM Group Panel
         sfm_script_group = QGroupBox("SfM Script", self)
@@ -77,7 +87,7 @@ class SfMWorkflowApp(QDialog):
         sfm_script_layout.addWidget(self.sfm_script_button)
         sfm_script_layout.addWidget(self.sfm_script_path_label)  # Add the label to the layout
 
-        layout.addWidget(sfm_script_group)
+        azure_layout.addWidget(sfm_script_group)
 
         ###
         # Cloud Credentials Panel
@@ -119,7 +129,7 @@ class SfMWorkflowApp(QDialog):
         cloud_credentials_layout.addWidget(computes_label)
         cloud_credentials_layout.addWidget(self.computes_input)
 
-        layout.addWidget(cloud_credentials_group)
+        azure_layout.addWidget(cloud_credentials_group)
 
         ###
         # Input & Output Directory
@@ -151,6 +161,8 @@ class SfMWorkflowApp(QDialog):
         self.io_path_layout.addWidget(output_path_label)
         self.io_path_layout.addWidget(self.output_path_button)
 
+        local_layout.addWidget(io_group)
+
         # URI Tab
         input_uri_label = QLabel("Input URI:")
         self.input_uri_input = QLineEdit()
@@ -179,9 +191,7 @@ class SfMWorkflowApp(QDialog):
         self.io_tab_widget.addTab(self.io_uri_widget, "URI")
         self.io_tab_widget.addTab(self.io_url_widget, "URL")
 
-        io_layout.addWidget(self.io_tab_widget)
-        io_group.setLayout(io_layout)
-        layout.addWidget(io_group)
+        azure_layout.addWidget(self.io_tab_widget)
 
         ###
         # SfM Group Panel
