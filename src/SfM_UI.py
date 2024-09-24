@@ -56,8 +56,17 @@ class SfMWorkflowApp(QDialog):
             "export_report": QCheckBox("Export Report", self)
         }
 
+        self.main_tab_widget = QTabWidget(self)
+        self.main_tab_widget.currentChanged.connect(self.adjust_tab_height)
+
         self.initUI()
         self.load_config()
+
+    def adjust_tab_height(self):
+        current_tab_index = self.main_tab_widget.currentIndex()
+        current_tab = self.main_tab_widget.widget(current_tab_index)
+        current_tab_height = current_tab.sizeHint().height()
+        self.main_tab_widget.setFixedHeight(current_tab_height)
 
     def initUI(self):
         layout = QVBoxLayout(self)
@@ -102,69 +111,100 @@ class SfMWorkflowApp(QDialog):
         cloud_credentials_layout.addWidget(computes_label)
         cloud_credentials_layout.addWidget(self.computes_input)
 
-        layout.addWidget(cloud_credentials_group)
-
         ###
         # Input & Output Directory
-        io_group = QGroupBox("Input / Output")
-        io_layout = QVBoxLayout()
+
+        # Local Tab
+        local_tab = QWidget()
+        local_layout = QVBoxLayout(local_tab)
+
+        local_content_widget = QWidget()
+        local_content_layout = QVBoxLayout(local_content_widget)
+
+        local_io_group = QGroupBox("Input / Output")
+        local_io_layout = QVBoxLayout()
 
         description = QLabel("Select the input and output directories below")
         description.setWordWrap(True)
-        io_layout.addWidget(description)
+        local_io_layout.addWidget(description)
 
-        self.io_tab_widget = QTabWidget()
-        self.io_path_widget = QWidget()
-        self.io_uri_widget = QWidget()
-        self.io_url_widget = QWidget()
-
-        self.io_path_layout = QVBoxLayout()
-        self.io_uri_layout = QVBoxLayout()
-        self.io_url_layout = QVBoxLayout()
-
-        # Path Tab
         input_path_label = QLabel("Input Directory:")
         self.input_path_button = QPushButton("Choose Input Directory")
+        self.input_path_button.setFixedHeight(15)
         self.input_path_button.clicked.connect(self.choose_input_directory)
         output_path_label = QLabel("Output Directory:")
         self.output_path_button = QPushButton("Choose Output Directory")
+        self.output_path_button.setFixedHeight(15)
         self.output_path_button.clicked.connect(self.choose_output_directory)
-        self.io_path_layout.addWidget(input_path_label)
-        self.io_path_layout.addWidget(self.input_path_button)
-        self.io_path_layout.addWidget(output_path_label)
-        self.io_path_layout.addWidget(self.output_path_button)
+
+        local_io_layout.addWidget(input_path_label)
+        local_io_layout.addWidget(self.input_path_button)
+        local_io_layout.addWidget(output_path_label)
+        local_io_layout.addWidget(self.output_path_button)
+
+        local_io_group.setLayout(local_io_layout)
+        local_content_layout.addWidget(local_io_group)
+
+        local_layout.addWidget(local_content_widget)
+
+        self.main_tab_widget.addTab(local_tab, "Local")
+
+        # Azure Tab
+        azure_tab = QWidget()
+        azure_layout = QVBoxLayout(azure_tab)
+
+        azure_io_group = QGroupBox("Input / Output")
+        azure_io_layout = QVBoxLayout()
+
+        description = QLabel("Enter the input and output paths below")
+        description.setWordWrap(True)
+        azure_io_layout.addWidget(description)
+
+        azure_io_tab_widget = QTabWidget()
 
         # URI Tab
+        io_uri_widget = QWidget()
+        io_uri_layout = QVBoxLayout()
+
         input_uri_label = QLabel("Input URI:")
         self.input_uri_input = QLineEdit()
         output_uri_label = QLabel("Output URI:")
         self.output_uri_input = QLineEdit()
-        self.io_uri_layout.addWidget(input_uri_label)
-        self.io_uri_layout.addWidget(self.input_uri_input)
-        self.io_uri_layout.addWidget(output_uri_label)
-        self.io_uri_layout.addWidget(self.output_uri_input)
+        io_uri_layout.addWidget(input_uri_label)
+        io_uri_layout.addWidget(self.input_uri_input)
+        io_uri_layout.addWidget(output_uri_label)
+        io_uri_layout.addWidget(self.output_uri_input)
+
+        io_uri_widget.setLayout(io_uri_layout)
 
         # URL Tab
+        io_url_widget = QWidget()
+        io_url_layout = QVBoxLayout()
+
         input_url_label = QLabel("Input URL:")
         self.input_url_input = QLineEdit()
         output_url_label = QLabel("Output URL:")
         self.output_url_input = QLineEdit()
-        self.io_url_layout.addWidget(input_url_label)
-        self.io_url_layout.addWidget(self.input_url_input)
-        self.io_url_layout.addWidget(output_url_label)
-        self.io_url_layout.addWidget(self.output_url_input)
+        io_url_layout.addWidget(input_url_label)
+        io_url_layout.addWidget(self.input_url_input)
+        io_url_layout.addWidget(output_url_label)
+        io_url_layout.addWidget(self.output_url_input)
 
-        self.io_path_widget.setLayout(self.io_path_layout)
-        self.io_uri_widget.setLayout(self.io_uri_layout)
-        self.io_url_widget.setLayout(self.io_url_layout)
+        io_url_widget.setLayout(io_url_layout)
 
-        self.io_tab_widget.addTab(self.io_path_widget, "Path")
-        self.io_tab_widget.addTab(self.io_uri_widget, "URI")
-        self.io_tab_widget.addTab(self.io_url_widget, "URL")
+        azure_io_tab_widget.addTab(io_uri_widget, "URI")
+        azure_io_tab_widget.addTab(io_url_widget, "URL")
 
-        io_layout.addWidget(self.io_tab_widget)
-        io_group.setLayout(io_layout)
-        layout.addWidget(io_group)
+        azure_io_layout.addWidget(azure_io_tab_widget)
+        azure_io_group.setLayout(azure_io_layout)
+
+        azure_layout.addWidget(cloud_credentials_group)
+        azure_layout.addWidget(azure_io_group)
+
+        self.main_tab_widget.addTab(azure_tab, "Azure")
+
+        # Add the main tab widget to the layout
+        layout.addWidget(self.main_tab_widget)
 
         ###
         # SfM Group Panel
