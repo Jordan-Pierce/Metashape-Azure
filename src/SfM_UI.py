@@ -1,6 +1,7 @@
 import json
 import os
 import warnings
+import requests
 
 from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (QTabWidget, QFileDialog, QVBoxLayout, QWidget, QPushButton, QLineEdit, QGroupBox, QLabel,
@@ -60,24 +61,6 @@ class SfMWorkflowApp(QDialog):
 
     def initUI(self):
         layout = QVBoxLayout(self)
-
-        ###
-        # SfM Group Panel
-        sfm_script_group = QGroupBox("SfM Script", self)
-        sfm_script_layout = QVBoxLayout(sfm_script_group)
-
-        description = QLabel("Select the most current SfM script")
-        description.setWordWrap(True)
-        sfm_script_layout.addWidget(description)
-
-        # SfM Script File Chooser
-        self.sfm_script_button = QPushButton("Choose SfM Script")
-        self.sfm_script_button.clicked.connect(self.choose_sfm_script)
-        self.sfm_script_path_label = QLabel('', self)  # Label to display the selected file path
-        sfm_script_layout.addWidget(self.sfm_script_button)
-        sfm_script_layout.addWidget(self.sfm_script_path_label)  # Add the label to the layout
-
-        layout.addWidget(sfm_script_group)
 
         ###
         # Cloud Credentials Panel
@@ -215,23 +198,25 @@ class SfMWorkflowApp(QDialog):
         self.target_percentage_input.setValue(75)
         sfm_functions_layout.addWidget(self.target_percentage_input)
 
-        # Building Functions
-        building_group = QGroupBox("Building Functions")
-        building_group.setFixedWidth(400)
-        building_layout = QVBoxLayout()
+        # Create a QTabWidget for Building and Export functions
+        functions_tab_widget = QTabWidget(self)
+
+        # Building Functions Tab
+        building_tab = QWidget()
+        building_layout = QVBoxLayout(building_tab)
         for function in self.building_functions.values():
             building_layout.addWidget(function)
-        building_group.setLayout(building_layout)
-        sfm_functions_layout.addWidget(building_group)
+        functions_tab_widget.addTab(building_tab, "Building")
 
-        # Export Functions
-        export_group = QGroupBox("Export Functions")
-        export_group.setFixedWidth(400)
-        export_layout = QVBoxLayout()
+        # Export Functions Tab
+        export_tab = QWidget()
+        export_layout = QVBoxLayout(export_tab)
         for function in self.export_functions.values():
             export_layout.addWidget(function)
-        export_group.setLayout(export_layout)
-        sfm_functions_layout.addWidget(export_group)
+        functions_tab_widget.addTab(export_tab, "Export")
+
+        # Add the QTabWidget to the sfm_functions_layout
+        sfm_functions_layout.addWidget(functions_tab_widget)
 
         layout.addWidget(sfm_functions_group)
 
@@ -252,6 +237,28 @@ class SfMWorkflowApp(QDialog):
         main_layout = QVBoxLayout(self)
         main_layout.addWidget(scroll_area)
         self.setLayout(main_layout)
+
+    def download_sfm_script(self):
+        """Method to download the SfM script from the GitHub repository."""
+        try:
+            # Specify the output directory and file path
+            output_dir = os.path.expanduser("~/.azureml")
+            output_path = os.path.join(output_dir, "SfM.py")
+            if os.path.exists(output_path):
+                os.remove(output_path)
+
+            # Download the SfM script from the GitHub repository
+            url = "https://raw.githubusercontent.com/Jordan-Pierce/Metashape-Azure/refs/heads/dev/src/SfM.py"
+            response = requests.get(url)
+            if response.status_code == 200:
+                with open(output_path, "wb") as f:
+                    f.write(response.content)
+                return output_path
+            else:
+                raise Exception("Failed to download the SfM script.")
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
+            return ""
 
     def choose_sfm_script(self):
         options = QFileDialog.Options()
@@ -456,9 +463,9 @@ class SfMWorkflowApp(QDialog):
                 raise Exception("No compute selected. Please authenticate and select a compute.")
 
             # Get the SfM script path
-            sfm_script_path = self.sfm_script_path_label.text()
+            sfm_script_path = self.download_sfm_script()
             if not os.path.exists(sfm_script_path):
-                raise Exception("SfM script file not found. Please select a valid script file.")
+                raise Exception("SfM script file not found.")
 
             # Submit the job to the compute
             print(f"Submitting job to compute: {self.compute_name}")
