@@ -406,6 +406,7 @@ class SfMWorkflowApp(QDialog):
                 # Run on Azure
                 self.run_workflow_azure()
                 QMessageBox.information(self, 'Success', 'Workflow submitted to Azure!')
+                self.accept()
 
         except Exception as e:
             print(f"ERROR: {e}")
@@ -413,7 +414,6 @@ class SfMWorkflowApp(QDialog):
 
         # Make the cursor normal
         self.setCursor(Qt.ArrowCursor)
-        self.accept()
 
     def run_workflow_locally(self):
         """Method to run the SfM workflow locally."""
