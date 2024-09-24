@@ -140,58 +140,43 @@ class SfMWorkflowApp(QDialog):
         description.setWordWrap(True)
         io_layout.addWidget(description)
 
-        self.io_tab_widget = QTabWidget()
-        self.io_path_widget = QWidget()
-        self.io_uri_widget = QWidget()
-        self.io_url_widget = QWidget()
-
-        self.io_path_layout = QVBoxLayout()
-        self.io_uri_layout = QVBoxLayout()
-        self.io_url_layout = QVBoxLayout()
-
-        # Path Tab
         input_path_label = QLabel("Input Directory:")
         self.input_path_button = QPushButton("Choose Input Directory")
         self.input_path_button.clicked.connect(self.choose_input_directory)
         output_path_label = QLabel("Output Directory:")
         self.output_path_button = QPushButton("Choose Output Directory")
         self.output_path_button.clicked.connect(self.choose_output_directory)
-        self.io_path_layout.addWidget(input_path_label)
-        self.io_path_layout.addWidget(self.input_path_button)
-        self.io_path_layout.addWidget(output_path_label)
-        self.io_path_layout.addWidget(self.output_path_button)
+        io_layout.addWidget(input_path_label)
+        io_layout.addWidget(self.input_path_button)
+        io_layout.addWidget(output_path_label)
+        io_layout.addWidget(self.output_path_button)
 
         local_layout.addWidget(io_group)
 
-        # URI Tab
+        ###
+        # URI & URL
+        uri_url_group = QGroupBox("URI / URL")
+        uri_url_layout = QVBoxLayout()
+
         input_uri_label = QLabel("Input URI:")
         self.input_uri_input = QLineEdit()
         output_uri_label = QLabel("Output URI:")
         self.output_uri_input = QLineEdit()
-        self.io_uri_layout.addWidget(input_uri_label)
-        self.io_uri_layout.addWidget(self.input_uri_input)
-        self.io_uri_layout.addWidget(output_uri_label)
-        self.io_uri_layout.addWidget(self.output_uri_input)
+        uri_url_layout.addWidget(input_uri_label)
+        uri_url_layout.addWidget(self.input_uri_input)
+        uri_url_layout.addWidget(output_uri_label)
+        uri_url_layout.addWidget(self.output_uri_input)
 
-        # URL Tab
         input_url_label = QLabel("Input URL:")
         self.input_url_input = QLineEdit()
         output_url_label = QLabel("Output URL:")
         self.output_url_input = QLineEdit()
-        self.io_url_layout.addWidget(input_url_label)
-        self.io_url_layout.addWidget(self.input_url_input)
-        self.io_url_layout.addWidget(output_url_label)
-        self.io_url_layout.addWidget(self.output_url_input)
+        uri_url_layout.addWidget(input_url_label)
+        uri_url_layout.addWidget(self.input_url_input)
+        uri_url_layout.addWidget(output_url_label)
+        uri_url_layout.addWidget(self.output_url_input)
 
-        self.io_path_widget.setLayout(self.io_path_layout)
-        self.io_uri_widget.setLayout(self.io_uri_layout)
-        self.io_url_widget.setLayout(self.io_url_layout)
-
-        self.io_tab_widget.addTab(self.io_path_widget, "Path")
-        self.io_tab_widget.addTab(self.io_uri_widget, "URI")
-        self.io_tab_widget.addTab(self.io_url_widget, "URL")
-
-        azure_layout.addWidget(self.io_tab_widget)
+        azure_layout.addWidget(uri_url_group)
 
         ###
         # SfM Group Panel
@@ -284,22 +269,18 @@ class SfMWorkflowApp(QDialog):
             self.output_path_button.setText(directory)
 
     def extract_input_value(self):
-        current_tab = self.io_tab_widget.currentIndex()
-        if current_tab == 0:  # Path
+        current_tab = self.tab_widget.currentIndex()
+        if current_tab == 0:  # Azure
+            return self.input_uri_input.text() or self.input_url_input.text()
+        elif current_tab == 1:  # Local
             return self.input_path_button.text()
-        elif current_tab == 1:  # URI
-            return self.input_uri_input.text()
-        elif current_tab == 2:  # URL
-            return self.input_url_input.text()
 
     def extract_output_value(self):
-        current_tab = self.io_tab_widget.currentIndex()
-        if current_tab == 0:  # Path
+        current_tab = self.tab_widget.currentIndex()
+        if current_tab == 0:  # Azure
+            return self.output_uri_input.text() or self.output_url_input.text()
+        elif current_tab == 1:  # Local
             return self.output_path_button.text()
-        elif current_tab == 1:  # URI
-            return self.output_uri_input.text()
-        elif current_tab == 2:  # URL
-            return self.output_url_input.text()
 
     def load_config(self):
         if os.path.exists(self.config_path):
