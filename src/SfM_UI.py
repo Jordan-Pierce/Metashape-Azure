@@ -160,7 +160,7 @@ class SfMWorkflowApp(QDialog):
         description.setWordWrap(True)
         azure_io_layout.addWidget(description)
 
-        azure_io_tab_widget = QTabWidget()
+        self.azure_io_tab_widget = QTabWidget()
 
         # URI Tab
         io_uri_widget = QWidget()
@@ -192,10 +192,10 @@ class SfMWorkflowApp(QDialog):
 
         io_url_widget.setLayout(io_url_layout)
 
-        azure_io_tab_widget.addTab(io_uri_widget, "URI")
-        azure_io_tab_widget.addTab(io_url_widget, "URL")
+        self.azure_io_tab_widget.addTab(io_uri_widget, "URI")
+        self.azure_io_tab_widget.addTab(io_url_widget, "URL")
 
-        azure_io_layout.addWidget(azure_io_tab_widget)
+        azure_io_layout.addWidget(self.azure_io_tab_widget)
         azure_io_group.setLayout(azure_io_layout)
 
         azure_layout.addWidget(cloud_credentials_group)
@@ -321,22 +321,26 @@ class SfMWorkflowApp(QDialog):
             self.output_path_button.setText(directory)
 
     def extract_input_value(self):
-        current_tab = self.io_tab_widget.currentIndex()
-        if current_tab == 0:  # Path
+        current_tab = self.main_tab_widget.currentIndex()
+        if current_tab == 0:  # Local
             return self.input_path_button.text()
-        elif current_tab == 1:  # URI
-            return self.input_uri_input.text()
-        elif current_tab == 2:  # URL
-            return self.input_url_input.text()
+        elif current_tab == 1:  # Azure
+            current_azure_tab = self.azure_io_tab_widget.currentIndex()
+            if current_azure_tab == 0:  # URI
+                return self.input_uri_input.text()
+            elif current_azure_tab == 1:  # URL
+                return self.input_url_input.text()
 
     def extract_output_value(self):
-        current_tab = self.io_tab_widget.currentIndex()
-        if current_tab == 0:  # Path
+        current_tab = self.main_tab_widget.currentIndex()
+        if current_tab == 0:  # Local
             return self.output_path_button.text()
-        elif current_tab == 1:  # URI
-            return self.output_uri_input.text()
-        elif current_tab == 2:  # URL
-            return self.output_url_input.text()
+        elif current_tab == 1:  # Azure
+            current_azure_tab = self.azure_io_tab_widget.currentIndex()
+            if current_azure_tab == 0:  # URI
+                return self.output_uri_input.text()
+            elif current_azure_tab == 1:  # URL
+                return self.output_url_input.text()
 
     def load_config(self):
         if os.path.exists(self.config_path):

@@ -132,7 +132,7 @@ class SfMWorkflow:
             raise Exception("ERROR: Input directory provided doesn't exist; please check input")
 
         # Create the output directory
-        self.output_dir = f"{input_dir}/{get_now()}"
+        self.output_dir = f"{output_dir}"
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Create filenames for data outputs
