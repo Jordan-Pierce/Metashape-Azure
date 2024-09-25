@@ -288,7 +288,7 @@ class SfMWorkflowApp(QDialog):
                 os.remove(output_path)
 
             # Download the SfM script from the GitHub repository
-            url = "https://raw.githubusercontent.com/Jordan-Pierce/Metashape-Azure/refs/heads/dev/src/SfM.py"
+            url = "https://raw.githubusercontent.com/Jordan-Pierce/Metashape-Azure/refs/heads/main/src/SfM.py"
             response = requests.get(url)
             if response.status_code == 200:
                 with open(output_path, "wb") as f:
