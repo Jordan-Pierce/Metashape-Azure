@@ -1,18 +1,22 @@
 import json
 import os
+import sys
 import warnings
+
 import requests
-
-from PySide2.QtCore import Qt
-from PySide2.QtWidgets import (QTabWidget, QFileDialog, QVBoxLayout, QWidget, QPushButton, QLineEdit, QGroupBox, QLabel,
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QTabWidget, QFileDialog, QVBoxLayout, QWidget, QPushButton, QLineEdit, QGroupBox, QLabel,
                                QSpinBox, QComboBox, QCheckBox, QScrollArea, QDialog, QMessageBox, QApplication)
-
 from azure.ai.ml import MLClient, Input, Output, command
 from azure.ai.ml.constants import AssetTypes, InputOutputModes
 from azure.identity import InteractiveBrowserCredential
 
-from SfM import Metashape
-from SfM import SfMWorkflow
+try:
+    # Import the SfM script from the local directory
+    from src.SfM import SfMWorkflow
+except:
+    # Import the SfM script from the local directory
+    from SfM import SfMWorkflow
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*experimental class.*")
@@ -574,13 +578,25 @@ class SfMWorkflowApp(QDialog):
             raise Exception(f"Failed to run the workflow on Azure!")
 
 
-def launch_app():
+def metashape_app():
     app = QApplication.instance()
     parent = app.activeWindow()
     dlg = SfMWorkflowApp(parent)
     dlg.exec_()
 
+def main_function():
+    app = QApplication(sys.argv)
+    dlg = SfMWorkflowApp()
+    dlg.exec_()
 
-label = "Scripts/Metashape-Azure"
-Metashape.app.addMenuItem(label, launch_app)
-print("To execute this script press {}".format(label))
+if __name__ == "__main__":
+    try:
+        import Metashape
+
+        label = "Scripts/Metashape-Azure"
+        Metashape.app.addMenuItem(label, metashape_app)
+        print("To execute this script press {}".format(label))
+    except Exception as e:
+        main_function()
+
+

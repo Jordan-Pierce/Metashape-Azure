@@ -3,3 +3,4 @@ notes.txt
 config.json
 Notebooks
 packages
+*.egg-info
