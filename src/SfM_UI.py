@@ -398,7 +398,9 @@ class SfMWorkflowApp(QDialog):
         try:
             compute_list = list(self.ml_client.compute.list())
             for compute in compute_list:
-                self.computes_input.addItem(f"{compute.name}")
+                # TODO Remove
+                if compute.name == "nccos-cluster-NC16vnet":
+                    self.computes_input.addItem(f"{compute.name}")
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
 
