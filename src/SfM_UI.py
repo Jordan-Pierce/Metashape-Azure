@@ -2,9 +2,11 @@ import json
 import os
 import sys
 import warnings
+import pkg_resources
 
 import requests
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QTabWidget, QFileDialog, QVBoxLayout, QWidget, QPushButton, QLineEdit, QGroupBox, QLabel,
                                QSpinBox, QComboBox, QCheckBox, QScrollArea, QDialog, QMessageBox, QApplication)
 from azure.ai.ml import MLClient, Input, Output, command
@@ -14,19 +16,42 @@ from azure.identity import InteractiveBrowserCredential
 try:
     # Import the SfM script from the local directory
     from src.SfM import SfMWorkflow
+    icon_src = "src"
 except:
     # Import the SfM script from the local directory
     from SfM import SfMWorkflow
+    icon_src = ""
 
 # Suppress specific warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*experimental class.*")
 warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*deprecated.*")
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+# Functions
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+def get_icon_path(icon_name):
+    """
+
+    :param icon_name:
+    :return:
+    """
+    return pkg_resources.resource_filename(icon_src, f'icons/{icon_name}')
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Classes
+# ----------------------------------------------------------------------------------------------------------------------
+
+
 class SfMWorkflowApp(QDialog):
     def __init__(self, parent=None):
         super(SfMWorkflowApp, self).__init__(parent)
-        self.setWindowTitle("SfM Workflow Interface")
+        self.setWindowTitle("SfM Workflow")
+        main_window_icon_path = get_icon_path("duck.png")
+        self.setWindowIcon(QIcon(main_window_icon_path))
         self.resize(600, 600)
 
         self.config_path = os.path.expanduser("~/.azureml/config.json")
@@ -59,6 +84,16 @@ class SfMWorkflowApp(QDialog):
             "export_ortho": QCheckBox("Export Orthomosaic", self),
             "export_report": QCheckBox("Export Report", self)
         }
+
+        self.input_path_button = QPushButton("Choose Input Directory", self)
+        self.input_path_button.clicked.connect(self.choose_input_directory)
+        self.input_path_display = QLineEdit(self)
+        self.input_path_display.setReadOnly(True)
+
+        self.output_path_button = QPushButton("Choose Output Directory", self)
+        self.output_path_button.clicked.connect(self.choose_output_directory)
+        self.output_path_display = QLineEdit(self)
+        self.output_path_display.setReadOnly(True)
 
         self.main_tab_widget = QTabWidget(self)
         self.main_tab_widget.currentChanged.connect(self.adjust_tab_height)
@@ -122,9 +157,6 @@ class SfMWorkflowApp(QDialog):
         local_tab = QWidget()
         local_layout = QVBoxLayout(local_tab)
 
-        local_content_widget = QWidget()
-        local_content_layout = QVBoxLayout(local_content_widget)
-
         local_io_group = QGroupBox("Input / Output")
         local_io_layout = QVBoxLayout()
 
@@ -133,23 +165,17 @@ class SfMWorkflowApp(QDialog):
         local_io_layout.addWidget(description)
 
         input_path_label = QLabel("Input Directory:")
-        self.input_path_button = QPushButton("Choose Input Directory")
-        self.input_path_button.setFixedHeight(15)
-        self.input_path_button.clicked.connect(self.choose_input_directory)
-        output_path_label = QLabel("Output Directory:")
-        self.output_path_button = QPushButton("Choose Output Directory")
-        self.output_path_button.setFixedHeight(15)
-        self.output_path_button.clicked.connect(self.choose_output_directory)
-
         local_io_layout.addWidget(input_path_label)
         local_io_layout.addWidget(self.input_path_button)
+        local_io_layout.addWidget(self.input_path_display)
+
+        output_path_label = QLabel("Output Directory:")
         local_io_layout.addWidget(output_path_label)
         local_io_layout.addWidget(self.output_path_button)
+        local_io_layout.addWidget(self.output_path_display)
 
         local_io_group.setLayout(local_io_layout)
-        local_content_layout.addWidget(local_io_group)
-
-        local_layout.addWidget(local_content_widget)
+        local_layout.addWidget(local_io_group)
 
         self.main_tab_widget.addTab(local_tab, "Local")
 
@@ -317,17 +343,17 @@ class SfMWorkflowApp(QDialog):
     def choose_input_directory(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Input Directory")
         if directory:
-            self.input_path_button.setText(directory)
+            self.input_path_display.setText(directory)
 
     def choose_output_directory(self):
         directory = QFileDialog.getExistingDirectory(self, "Select Output Directory")
         if directory:
-            self.output_path_button.setText(directory)
+            self.output_path_display.setText(directory)
 
     def extract_input_value(self):
         current_tab = self.main_tab_widget.currentIndex()
         if current_tab == 0:  # Local
-            return self.input_path_button.text()
+            return self.input_path_display.text()
         elif current_tab == 1:  # Azure
             current_azure_tab = self.azure_io_tab_widget.currentIndex()
             if current_azure_tab == 0:  # URI
@@ -338,7 +364,7 @@ class SfMWorkflowApp(QDialog):
     def extract_output_value(self):
         current_tab = self.main_tab_widget.currentIndex()
         if current_tab == 0:  # Local
-            return self.output_path_button.text()
+            return self.output_path_display.text()
         elif current_tab == 1:  # Azure
             current_azure_tab = self.azure_io_tab_widget.currentIndex()
             if current_azure_tab == 0:  # URI
@@ -600,5 +626,3 @@ if __name__ == "__main__":
         print("To execute this script press {}".format(label))
     except Exception as e:
         main_function()
-
-

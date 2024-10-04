@@ -30,4 +30,7 @@ setup(
             "metashape-azure-mls = src:main_function"
         ]
     },
+    package_data={
+        'src': ['icons/*']  # Ensure 'icons/*' is correct
+    },
 )
