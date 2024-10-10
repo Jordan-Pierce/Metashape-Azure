@@ -68,17 +68,6 @@ def get_gpu_mask(device: int):
     return gpuMask
 
 
-def get_now():
-    """
-    Returns a timestamp; used for file and folder names
-    """
-    # Get the current datetime
-    now = datetime.datetime.now()
-    now = now.strftime("%Y-%m-%d_%H-%M-%S")
-
-    return now
-
-
 def print_progress(p: int):
     """
     Prints progress to user
@@ -132,7 +121,7 @@ class SfMWorkflow:
             raise Exception("ERROR: Input directory provided doesn't exist; please check input")
 
         # Create the output directory
-        self.output_dir = f"{output_dir}/{get_now()}"
+        self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Create filenames for data outputs
@@ -204,7 +193,7 @@ class SfMWorkflow:
             Metashape.License().returnLicense()
             print("NOTE: License returned successfully")
         except Exception as e:
-            print(f"ERROR: Could not return license: {e}")
+            print(f"WARNING: Could not return license: {e}")
 
     def validate_license(self):
         """

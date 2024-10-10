@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import datetime
 import warnings
 import pkg_resources
 
@@ -39,6 +40,17 @@ def get_icon_path(icon_name):
     :return:
     """
     return pkg_resources.resource_filename(icon_src, f'icons/{icon_name}')
+
+
+def get_now():
+    """
+    Returns a timestamp; used for file and folder names
+    """
+    # Get the current datetime
+    now = datetime.datetime.now()
+    now = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+    return now
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -424,9 +436,7 @@ class SfMWorkflowApp(QDialog):
         try:
             compute_list = list(self.ml_client.compute.list())
             for compute in compute_list:
-                # TODO Remove
-                if compute.name == "nccos-cluster-NC16vnet":
-                    self.computes_input.addItem(f"{compute.name}")
+                self.computes_input.addItem(f"{compute.name}")
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
 
@@ -473,7 +483,7 @@ class SfMWorkflowApp(QDialog):
 
             # Method calls to get input / output strings
             self.input_dir = self.extract_input_value()
-            self.output_dir = self.extract_output_value()
+            self.output_dir = os.path.join(self.extract_output_value(), get_now())
 
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
@@ -489,7 +499,6 @@ class SfMWorkflowApp(QDialog):
                 # Run on Azure
                 self.run_workflow_azure()
                 QMessageBox.information(self, 'Success', 'Workflow submitted to Azure!')
-                self.accept()
 
         except Exception as e:
             print(f"ERROR: {e}")
@@ -551,7 +560,7 @@ class SfMWorkflowApp(QDialog):
             input_mode = InputOutputModes.DOWNLOAD  # RO_MOUNT
 
             # load in the output data info from the function def
-            output_path = self.output_dir
+            output_path = os.path.join(self.output_dir, get_now())
             output_mode = InputOutputModes.UPLOAD
 
             # get a local instance of the compute info
@@ -616,6 +625,7 @@ def main_function():
     app = QApplication(sys.argv)
     dlg = SfMWorkflowApp()
     dlg.exec_()
+
 
 if __name__ == "__main__":
     try:
