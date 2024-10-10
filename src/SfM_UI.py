@@ -1,8 +1,13 @@
+import warnings
+
+# Suppress specific warnings
+warnings.filterwarnings("ignore", category=UserWarning, message=".*experimental class.*")
+warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*deprecated.*")
+
 import json
 import os
 import sys
 import datetime
-import warnings
 import pkg_resources
 
 import requests
@@ -22,10 +27,6 @@ except:
     # Import the SfM script from the local directory
     from SfM import SfMWorkflow
     icon_src = ""
-
-# Suppress specific warnings
-warnings.filterwarnings("ignore", category=UserWarning, message=".*experimental class.*")
-warnings.filterwarnings("ignore", category=DeprecationWarning, message=".*deprecated.*")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
