@@ -560,7 +560,7 @@ class SfMWorkflowApp(QDialog):
             input_mode = InputOutputModes.DOWNLOAD  # RO_MOUNT
 
             # load in the output data info from the function def
-            output_path = os.path.join(self.output_dir, get_now())
+            output_path = self.output_dir
             output_mode = InputOutputModes.UPLOAD
 
             # get a local instance of the compute info
