@@ -6,9 +6,6 @@ import traceback
 import numpy as np
 from packaging import version
 
-# TODO parameter for marker detection; add to UI
-# TODO gradual selection - dial back to 10%
-
 # -----------------------------------------------------------------------------------------------------------
 # Version Checks
 # -----------------------------------------------------------------------------------------------------------
