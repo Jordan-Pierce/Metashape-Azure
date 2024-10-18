@@ -77,14 +77,13 @@ class SfMWorkflowApp(QDialog):
         self.device_input = QSpinBox(self)
         self.quality_input = QComboBox(self)
         self.target_percentage_input = QSpinBox(self)
-        self.detect_markers_input = QCheckBox("Detect Markers", self)
+        self.detect_markers_input = QComboBox(self)
 
         self.computes_input = QComboBox(self)  # Dropdown for computes
         self.computes_list = []  # Empty list to store compute options
 
         self.building_functions = {
             "add_photos": QCheckBox("Add Photos", self),
-            "detect_markers": QCheckBox("Detect Markers", self),
             "align_cameras": QCheckBox("Align Cameras", self),
             "optimize_cameras": QCheckBox("Optimize Cameras", self),
             "build_depth_maps": QCheckBox("Build Depth Maps", self),
@@ -290,8 +289,10 @@ class SfMWorkflowApp(QDialog):
 
         # Detect Markers
         detect_markers_label = QLabel('Detect Markers:')
-        detect_markers_label.setToolTip("Check to detect markers in the photos.")
+        detect_markers_label.setToolTip("Select whether to detect markers in the photos.")
         sfm_functions_layout.addWidget(detect_markers_label)
+        self.detect_markers_input.addItems(['True', 'False'])
+        self.detect_markers_input.setCurrentText('False')
         sfm_functions_layout.addWidget(self.detect_markers_input)
 
         # Create a QTabWidget for Building and Export functions
@@ -501,7 +502,7 @@ class SfMWorkflowApp(QDialog):
 
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
-            self.detect_markers = self.detect_markers_input.isChecked()
+            self.detect_markers = self.detect_markers_input.currentText() == 'True'
 
             # Make the cursor busy
             self.setCursor(Qt.WaitCursor)
@@ -605,7 +606,7 @@ class SfMWorkflowApp(QDialog):
                 f'--device {self.device_input.value()}',
                 f'--quality {self.quality_input.currentText()}',
                 f'--target_percentage {self.target_percentage_input.value()}',
-                f'--detect_markers {self.detect_markers_input.isChecked()}'
+                f'--detect_markers {self.detect_markers_input.currentText()}'
             ]
 
             for function_name, checkbox in self.building_functions.items():

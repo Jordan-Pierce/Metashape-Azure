@@ -405,7 +405,7 @@ class SfMWorkflow:
         """
         chunk = self.doc.chunk
 
-        if chunk.model and not chunk.model.Texture:
+        if chunk.model:
             announce("Building texture")
             chunk.buildUV()
             chunk.buildTexture(blending_mode=Metashape.BlendingMode.MosaicBlending,
@@ -490,11 +490,6 @@ class SfMWorkflow:
         if chunk.model and not os.path.exists(self.output_mesh):
             announce("Exporting mesh")
             chunk.exportModel(path=self.output_mesh,
-                              binary=True,
-                              precision=6,
-                              texture=True,
-                              normals=True,
-                              colors=True,
                               progress=print_progress)
             print("")
             print("Process Successful!")
@@ -508,7 +503,7 @@ class SfMWorkflow:
 
         if chunk.model and not os.path.exists(self.output_texture):
             announce("Exporting texture")
-            chunk.model.saveTexture(path=self.output_texture)
+            chunk.model.saveTexture(self.output_texture)
             print("")
             print("Process Successful!")
             self.doc.save()
@@ -706,6 +701,12 @@ def main():
     parser.add_argument('--build_point_cloud', action='store_true',
                         help='Build point cloud')
 
+    parser.add_argument('--build_mesh', action='store_true',
+                        help='Build mesh')
+
+    parser.add_argument('--build_texture', action='store_true',
+                        help='Build texture')
+
     parser.add_argument('--build_dem', action='store_true',
                         help='Build DEM')
 
@@ -717,6 +718,12 @@ def main():
 
     parser.add_argument('--export_point_cloud', action='store_true',
                         help='Export point cloud')
+
+    parser.add_argument('--export_mesh', action='store_true',
+                        help='Export mesh')
+
+    parser.add_argument('--export_texture', action='store_true',
+                        help='Export texture')
 
     parser.add_argument('--export_dem', action='store_true',
                         help='Export DEM')
@@ -742,10 +749,14 @@ def main():
                                optimize_cameras=args.optimize_cameras,
                                build_depth_maps=args.build_depth_maps,
                                build_point_cloud=args.build_point_cloud,
+                               build_mesh=args.build_mesh,
+                               build_texture=args.build_texture,
                                build_dem=args.build_dem,
                                build_ortho=args.build_ortho,
                                export_cameras=args.export_cameras,
                                export_point_cloud=args.export_point_cloud,
+                               export_mesh=args.export_mesh,
+                               export_texture=args.export_texture,
                                export_dem=args.export_dem,
                                export_ortho=args.export_ortho,
                                export_report=args.export_report)
