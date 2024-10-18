@@ -77,6 +77,7 @@ class SfMWorkflowApp(QDialog):
         self.device_input = QSpinBox(self)
         self.quality_input = QComboBox(self)
         self.target_percentage_input = QSpinBox(self)
+        self.detect_markers_input = QCheckBox("Detect Markers", self)
 
         self.computes_input = QComboBox(self)  # Dropdown for computes
         self.computes_list = []  # Empty list to store compute options
@@ -287,6 +288,12 @@ class SfMWorkflowApp(QDialog):
         self.target_percentage_input.setValue(10)
         sfm_functions_layout.addWidget(self.target_percentage_input)
 
+        # Detect Markers
+        detect_markers_label = QLabel('Detect Markers:')
+        detect_markers_label.setToolTip("Check to detect markers in the photos.")
+        sfm_functions_layout.addWidget(detect_markers_label)
+        sfm_functions_layout.addWidget(self.detect_markers_input)
+
         # Create a QTabWidget for Building and Export functions
         functions_tab_widget = QTabWidget(self)
 
@@ -494,6 +501,7 @@ class SfMWorkflowApp(QDialog):
 
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
+            self.detect_markers = self.detect_markers_input.isChecked()
 
             # Make the cursor busy
             self.setCursor(Qt.WaitCursor)
@@ -523,8 +531,8 @@ class SfMWorkflowApp(QDialog):
                                    output_dir=self.output_dir,
                                    quality=self.quality,
                                    target_percentage=self.target_percentage,
+                                   detect_markers=self.detect_markers,
                                    add_photos=self.building_functions['add_photos'].isChecked(),
-                                   detect_markers=self.building_functions['detect_markers'].isChecked(),
                                    align_cameras=self.building_functions['align_cameras'].isChecked(),
                                    optimize_cameras=self.building_functions['optimize_cameras'].isChecked(),
                                    build_depth_maps=self.building_functions['build_depth_maps'].isChecked(),
@@ -596,7 +604,8 @@ class SfMWorkflowApp(QDialog):
                 f'python SfM.py ${{inputs.input_data}} ${{outputs.output_data}}',
                 f'--device {self.device_input.value()}',
                 f'--quality {self.quality_input.currentText()}',
-                f'--target_percentage {self.target_percentage_input.value()}'
+                f'--target_percentage {self.target_percentage_input.value()}',
+                f'--detect_markers {self.detect_markers_input.isChecked()}'
             ]
 
             for function_name, checkbox in self.building_functions.items():
@@ -641,6 +650,7 @@ def main_function():
 
 if __name__ == "__main__":
     try:
+        raise ImportError("ImportError")
         import Metashape
 
         label = "Scripts/Metashape-Azure"

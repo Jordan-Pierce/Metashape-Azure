@@ -108,8 +108,8 @@ class SfMWorkflow:
                  output_dir,
                  quality='high',
                  target_percentage=10,
-                 add_photos=True,
                  detect_markers=True,
+                 add_photos=True,
                  align_cameras=True,
                  optimize_cameras=True,
                  build_depth_maps=True,
@@ -160,6 +160,9 @@ class SfMWorkflow:
         self.target_percentage = int(target_percentage)
         self.validate_target_percentage()
 
+        # Detect markers
+        self.detect_markers_flag = detect_markers
+
         Metashape.app.gpu_mask = get_gpu_mask(device=self.device)
         self.doc = Metashape.Document()
 
@@ -181,7 +184,6 @@ class SfMWorkflow:
 
         # Store the boolean parameters
         self.add_photos_flag = add_photos
-        self.detect_markers_flag = detect_markers
         self.align_cameras_flag = align_cameras
         self.optimize_cameras_flag = optimize_cameras
         self.build_depth_maps_flag = build_depth_maps
@@ -589,6 +591,18 @@ class SfMWorkflow:
             except Exception as e:
                 print(f"ERROR in build_point_cloud: {e}")
 
+        if self.build_mesh_flag:
+            try:
+                self.build_mesh()
+            except Exception as e:
+                print(f"ERROR in build_mesh: {e}")
+
+        if self.build_texture_flag:
+            try:
+                self.build_texture()
+            except Exception as e:
+                print(f"ERROR in build_texture: {e}")
+
         if self.build_dem_flag:
             try:
                 self.build_dem()
@@ -612,6 +626,18 @@ class SfMWorkflow:
                 self.export_point_cloud()
             except Exception as e:
                 print(f"ERROR in export_point_cloud: {e}")
+
+        if self.export_mesh_flag:
+            try:
+                self.export_mesh()
+            except Exception as e:
+                print(f"ERROR in export_mesh: {e}")
+
+        if self.export_texture_flag:
+            try:
+                self.export_texture()
+            except Exception as e:
+                print(f"ERROR in export_texture: {e}")
 
         if self.export_dem_flag:
             try:
@@ -659,8 +685,11 @@ def main():
                         choices=['lowest', 'low', 'medium', 'high', 'highest'],
                         help='Quality of the workflow (default: medium)')
 
-    parser.add_argument('--target_percentage', type=int, default=75,
-                        help='Target percentage for optimization (default: 75)')
+    parser.add_argument('--target_percentage', type=int, default=10,
+                        help='Target percentage for optimization (default: 10)')
+
+    parser.add_argument('--detect_markers', action='store_true',
+                        help='Detect markers in photos')
 
     parser.add_argument('--add_photos', action='store_true',
                         help='Add photos to the project')
@@ -707,6 +736,7 @@ def main():
                                output_dir=args.output_path,
                                quality=args.quality,
                                target_percentage=args.target_percentage,
+                               detect_markers=args.detect_markers,
                                add_photos=args.add_photos,
                                align_cameras=args.align_cameras,
                                optimize_cameras=args.optimize_cameras,
