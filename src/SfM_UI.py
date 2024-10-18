@@ -650,7 +650,6 @@ def main_function():
 
 if __name__ == "__main__":
     try:
-        raise ImportError("ImportError")
         import Metashape
 
         label = "Scripts/Metashape-Azure"
