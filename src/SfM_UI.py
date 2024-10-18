@@ -283,7 +283,7 @@ class SfMWorkflowApp(QDialog):
         target_percentage_label.setToolTip("Set the target percentage for filtering points.")
         sfm_functions_layout.addWidget(target_percentage_label)
         self.target_percentage_input.setRange(0, 100)
-        self.target_percentage_input.setValue(75)
+        self.target_percentage_input.setValue(10)
         sfm_functions_layout.addWidget(self.target_percentage_input)
 
         # Create a QTabWidget for Building and Export functions
