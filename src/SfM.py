@@ -6,6 +6,9 @@ import traceback
 import numpy as np
 from packaging import version
 
+# TODO parameter for marker detection; add to UI
+# TODO gradual selection - dial back to 10%
+
 # -----------------------------------------------------------------------------------------------------------
 # Version Checks
 # -----------------------------------------------------------------------------------------------------------
@@ -101,10 +104,30 @@ def find_files(folder: str, types: list):
 # -----------------------------------------------------------------------------------------------------------
 
 class SfMWorkflow:
-    def __init__(self, device, input_dir, project_file, output_dir, quality='high', target_percentage=75,
-                 add_photos=True, align_cameras=True, optimize_cameras=True, build_depth_maps=True,
-                 build_point_cloud=True, build_dem=True, build_ortho=True, export_cameras=True,
-                 export_point_cloud=True, export_dem=True, export_ortho=True, export_report=True):
+    def __init__(self,
+                 device,
+                 input_dir,
+                 project_file,
+                 output_dir,
+                 quality='high',
+                 target_percentage=10,
+                 add_photos=True,
+                 detect_markers=True,
+                 align_cameras=True,
+                 optimize_cameras=True,
+                 build_depth_maps=True,
+                 build_point_cloud=True,
+                 build_mesh=True,
+                 build_texture=True,
+                 build_dem=True,
+                 build_ortho=True,
+                 export_cameras=True,
+                 export_point_cloud=True,
+                 export_mesh=True,
+                 export_texture=True,
+                 export_dem=True,
+                 export_ortho=True,
+                 export_report=True):
 
         # Ensure the license is activated
         self.borrow_license()
@@ -126,6 +149,8 @@ class SfMWorkflow:
         # Create filenames for data outputs
         self.output_dem = f"{self.output_dir}/DEM.tif"
         self.output_dense = f"{self.output_dir}/Dense_Cloud.ply"
+        self.output_mesh = f"{self.output_dir}/Mesh.ply"
+        self.output_texture = f"{self.output_dir}/Texture.jpg"
         self.output_ortho = f"{self.output_dir}/Orthomosaic.tif"
         self.output_cameras = f"{self.output_dir}/Cameras.xml"
         self.output_report = f"{self.output_dir}/Report.pdf"
@@ -159,14 +184,20 @@ class SfMWorkflow:
 
         # Store the boolean parameters
         self.add_photos_flag = add_photos
+        self.detect_markers_flag = detect_markers
         self.align_cameras_flag = align_cameras
         self.optimize_cameras_flag = optimize_cameras
         self.build_depth_maps_flag = build_depth_maps
         self.build_point_cloud_flag = build_point_cloud
+        self.build_mesh_flag = build_mesh
+        self.build_texture_flag = build_texture
         self.build_dem_flag = build_dem
         self.build_ortho_flag = build_ortho
+
         self.export_cameras_flag = export_cameras
         self.export_point_cloud_flag = export_point_cloud
+        self.export_mesh_flag = export_mesh
+        self.export_texture_flag = export_texture
         self.export_dem_flag = export_dem
         self.export_ortho_flag = export_ortho
         self.export_report_flag = export_report
@@ -246,7 +277,9 @@ class SfMWorkflow:
         if not chunk.tie_points:
 
             announce("Matching photos")
-            chunk.detectMarkers(target_type=Metashape.CircularTarget12bit)
+
+            if self.detect_markers_flag:
+                chunk.detectMarkers(target_type=Metashape.CircularTarget12bit)
 
             downscale = {"lowest": 8,
                          "low": 4,
@@ -350,6 +383,41 @@ class SfMWorkflow:
             print("Process Successful!")
             self.doc.save()
 
+    def build_mesh(self):
+        """
+
+        """
+        chunk = self.doc.chunk
+
+        if chunk.point_cloud and not chunk.model:
+            announce("Building mesh")
+            chunk.buildModel(surface_type=Metashape.Arbitrary,
+                             interpolation=Metashape.EnabledInterpolation,
+                             face_count=Metashape.HighFaceCount,
+                             source_data=Metashape.PointCloudData,
+                             progress=print_progress)
+            print("")
+            print("Process Successful!")
+            self.doc.save()
+
+    def build_texture(self):
+        """
+
+        """
+        chunk = self.doc.chunk
+
+        if chunk.model and not chunk.model.Texture:
+            announce("Building texture")
+            chunk.buildUV()
+            chunk.buildTexture(blending_mode=Metashape.BlendingMode.MosaicBlending,
+                               texture_size=4096,
+                               texture_type=Metashape.Model.TextureType.DiffuseMap,
+                               source_model=chunk.model,
+                               transfer_texture=False)
+            print("")
+            print("Process Successful!")
+            self.doc.save()
+
     def build_dem(self):
         """
 
@@ -410,6 +478,38 @@ class SfMWorkflow:
                                    save_point_confidence=True,
                                    crs=chunk.crs,
                                    progress=print_progress)
+            print("")
+            print("Process Successful!")
+            self.doc.save()
+
+    def export_mesh(self):
+        """
+
+        """
+        chunk = self.doc.chunk
+
+        if chunk.model and not os.path.exists(self.output_mesh):
+            announce("Exporting mesh")
+            chunk.exportModel(path=self.output_mesh,
+                              binary=True,
+                              precision=6,
+                              texture=True,
+                              normals=True,
+                              colors=True,
+                              progress=print_progress)
+            print("")
+            print("Process Successful!")
+            self.doc.save()
+
+    def export_texture(self):
+        """
+
+        """
+        chunk = self.doc.chunk
+
+        if chunk.model and not os.path.exists(self.output_texture):
+            announce("Exporting texture")
+            chunk.model.saveTexture(path=self.output_texture)
             print("")
             print("Process Successful!")
             self.doc.save()

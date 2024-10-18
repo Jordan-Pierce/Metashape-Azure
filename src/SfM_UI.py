@@ -82,10 +82,13 @@ class SfMWorkflowApp(QDialog):
 
         self.building_functions = {
             "add_photos": QCheckBox("Add Photos", self),
+            "detect_markers": QCheckBox("Detect Markers", self),
             "align_cameras": QCheckBox("Align Cameras", self),
             "optimize_cameras": QCheckBox("Optimize Cameras", self),
             "build_depth_maps": QCheckBox("Build Depth Maps", self),
             "build_point_cloud": QCheckBox("Build Point Cloud", self),
+            "build_mesh": QCheckBox("Build Mesh", self),
+            "build_texture": QCheckBox("Build Texture", self),
             "build_dem": QCheckBox("Build DEM", self),
             "build_ortho": QCheckBox("Build Orthomosaic", self)
         }
@@ -93,6 +96,8 @@ class SfMWorkflowApp(QDialog):
         self.export_functions = {
             "export_cameras": QCheckBox("Export Cameras", self),
             "export_point_cloud": QCheckBox("Export Point Cloud", self),
+            "export_mesh": QCheckBox("Export Mesh", self),
+            "export_texture": QCheckBox("Export Texture", self),
             "export_dem": QCheckBox("Export DEM", self),
             "export_ortho": QCheckBox("Export Orthomosaic", self),
             "export_report": QCheckBox("Export Report", self)
@@ -518,14 +523,19 @@ class SfMWorkflowApp(QDialog):
                                    quality=self.quality,
                                    target_percentage=self.target_percentage,
                                    add_photos=self.building_functions['add_photos'].isChecked(),
+                                   detect_markers=self.building_functions['detect_markers'].isChecked(),
                                    align_cameras=self.building_functions['align_cameras'].isChecked(),
                                    optimize_cameras=self.building_functions['optimize_cameras'].isChecked(),
                                    build_depth_maps=self.building_functions['build_depth_maps'].isChecked(),
                                    build_point_cloud=self.building_functions['build_point_cloud'].isChecked(),
+                                   build_mesh=self.building_functions['build_mesh'].isChecked(),
+                                   build_texture=self.building_functions['build_texture'].isChecked(),
                                    build_dem=self.building_functions['build_dem'].isChecked(),
                                    build_ortho=self.building_functions['build_ortho'].isChecked(),
                                    export_cameras=self.export_functions['export_cameras'].isChecked(),
                                    export_point_cloud=self.export_functions['export_point_cloud'].isChecked(),
+                                   export_mesh=self.export_functions['export_mesh'].isChecked(),
+                                   export_texture=self.export_functions['export_texture'].isChecked(),
                                    export_dem=self.export_functions['export_dem'].isChecked(),
                                    export_ortho=self.export_functions['export_ortho'].isChecked(),
                                    export_report=self.export_functions['export_report'].isChecked())
