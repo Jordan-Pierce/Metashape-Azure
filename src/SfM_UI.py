@@ -508,7 +508,7 @@ class SfMWorkflowApp(QDialog):
 
         except Exception as e:
             print(f"ERROR: {e}")
-            QMessageBox.critical(self, 'Error', "Failed to run the workflow!")
+            QMessageBox.critical(self, 'Error', "Failed to complete all steps the workflow!")
 
         # Make the cursor normal
         self.setCursor(Qt.ArrowCursor)
@@ -550,7 +550,7 @@ class SfMWorkflowApp(QDialog):
 
         except Exception as e:
             print(f"ERROR: {e}")
-            raise Exception(f"Failed to run the workflow locally!")
+            raise Exception(f"Failed to run all processes in the workflow locally!")
 
     def run_workflow_azure(self):
         """Method to run the SfM workflow on Azure."""
@@ -623,7 +623,7 @@ class SfMWorkflowApp(QDialog):
 
         except Exception as e:
             print(f"ERROR: {e}")
-            raise Exception(f"Failed to run the workflow on Azure!")
+            raise Exception(f"Failed to run all processes in the workflow on Azure!")
 
 
 def metashape_app():
