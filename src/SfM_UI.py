@@ -606,8 +606,10 @@ class SfMWorkflowApp(QDialog):
                 f'--device {self.device_input.value()}',
                 f'--quality {self.quality_input.currentText()}',
                 f'--target_percentage {self.target_percentage_input.value()}',
-                f'--detect_markers {self.detect_markers_input.currentText()}'
             ]
+
+            if self.detect_markers_input.currentText() == 'True':
+                command_args.append('--detect_markers')
 
             for function_name, checkbox in self.building_functions.items():
                 if checkbox.isChecked():
