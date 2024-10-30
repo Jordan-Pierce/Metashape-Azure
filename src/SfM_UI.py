@@ -97,6 +97,7 @@ class SfMWorkflowApp(QDialog):
         self.export_functions = {
             "export_cameras": QCheckBox("Export Cameras", self),
             "export_point_cloud": QCheckBox("Export Point Cloud", self),
+            "export_potree": QCheckBox("Export Potree", self),
             "export_mesh": QCheckBox("Export Mesh", self),
             "export_texture": QCheckBox("Export Texture", self),
             "export_dem": QCheckBox("Export DEM", self),
@@ -544,6 +545,7 @@ class SfMWorkflowApp(QDialog):
                                    build_ortho=self.building_functions['build_ortho'].isChecked(),
                                    export_cameras=self.export_functions['export_cameras'].isChecked(),
                                    export_point_cloud=self.export_functions['export_point_cloud'].isChecked(),
+                                   export_potree=self.export_functions['export_potree'].isChecked(),
                                    export_mesh=self.export_functions['export_mesh'].isChecked(),
                                    export_texture=self.export_functions['export_texture'].isChecked(),
                                    export_dem=self.export_functions['export_dem'].isChecked(),

@@ -120,6 +120,7 @@ class SfMWorkflow:
                  build_ortho=True,
                  export_cameras=True,
                  export_point_cloud=True,
+                 export_potree=True,
                  export_mesh=True,
                  export_texture=True,
                  export_dem=True,
@@ -146,6 +147,7 @@ class SfMWorkflow:
         # Create filenames for data outputs
         self.output_dem = f"{self.output_dir}/DEM.tif"
         self.output_dense = f"{self.output_dir}/Dense_Cloud.ply"
+        self.output_potree = f"{self.output_dir}/Potree.zip"
         self.output_mesh = f"{self.output_dir}/Mesh.ply"
         self.output_texture = f"{self.output_dir}/Texture.jpg"
         self.output_ortho = f"{self.output_dir}/Orthomosaic.tif"
@@ -195,6 +197,7 @@ class SfMWorkflow:
 
         self.export_cameras_flag = export_cameras
         self.export_point_cloud_flag = export_point_cloud
+        self.export_potree_flag = export_potree
         self.export_mesh_flag = export_mesh
         self.export_texture_flag = export_texture
         self.export_dem_flag = export_dem
@@ -481,6 +484,26 @@ class SfMWorkflow:
             print("Process Successful!")
             self.doc.save()
 
+    def export_potree(self):
+        """
+
+        """
+        chunk = self.doc.chunk
+
+        if chunk.point_cloud and not os.path.exists(self.output_potree):
+            announce("Exporting dense point cloud")
+            chunk.exportPointCloud(path=self.output_potree,
+                                   format=Metashape.PointCloudFormatPotree,
+                                   save_point_color=True,
+                                   save_point_classification=True,
+                                   save_point_normal=True,
+                                   save_point_confidence=True,
+                                   crs=chunk.crs,
+                                   progress=print_progress)
+            print("")
+            print("Process Successful!")
+            self.doc.save()
+
     def export_mesh(self):
         """
 
@@ -622,6 +645,12 @@ class SfMWorkflow:
             except Exception as e:
                 print(f"ERROR in export_point_cloud: {e}")
 
+        if self.export_potree_flag:
+            try:
+                self.export_potree()
+            except Exception as e:
+                print(f"ERROR in export_potree: {e}")
+
         if self.export_mesh_flag:
             try:
                 self.export_mesh()
@@ -719,6 +748,9 @@ def main():
     parser.add_argument('--export_point_cloud', action='store_true',
                         help='Export point cloud')
 
+    parser.add_argument('--export_potree', action='store_true',
+                        help='Export Potree')
+
     parser.add_argument('--export_mesh', action='store_true',
                         help='Export mesh')
 
@@ -755,6 +787,7 @@ def main():
                                build_ortho=args.build_ortho,
                                export_cameras=args.export_cameras,
                                export_point_cloud=args.export_point_cloud,
+                               export_potree=args.export_potree,
                                export_mesh=args.export_mesh,
                                export_texture=args.export_texture,
                                export_dem=args.export_dem,
