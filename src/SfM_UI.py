@@ -274,11 +274,13 @@ class SfMWorkflowApp(QDialog):
         # Run Local Button
         run_local_button = QPushButton('Run Locally')
         run_local_button.clicked.connect(self.run_workflow_locally)
+        run_local_button.setStyleSheet("background-color: red; color: white;")
         run_button_layout.addWidget(run_local_button)
         
         # Run Azure Button
         run_azure_button = QPushButton('Run on Azure')
         run_azure_button.clicked.connect(self.run_workflow_azure)
+        run_azure_button.setStyleSheet("background-color: green; color: white;")
         run_button_layout.addWidget(run_azure_button)
         
         # Add run buttons to right panel
@@ -439,7 +441,7 @@ class SfMWorkflowApp(QDialog):
                 return
             
             if not self.output_name:
-                self.output_name = f"project_{get_now()}"
+                self.output_name = get_now()
 
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
@@ -552,7 +554,10 @@ class SfMWorkflowApp(QDialog):
 
             # create linux command line commands to be sent to the compute target
             command_args = [
-                f'python SfM.py --input_dir ${{inputs.input_data}} --output_dir ${{outputs.output_data}}',
+                f'python SfM.py',
+                f'--input_path ${{inputs.input_data}}',
+                f'--output_path ${{outputs.output_data}}',
+                f'--output_name {self.output_name}',
                 f'--device {self.device_input.value()}',
                 f'--quality {self.quality_input.currentText()}',
                 f'--target_percentage {self.target_percentage_input.value()}',
