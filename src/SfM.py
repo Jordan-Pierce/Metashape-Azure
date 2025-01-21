@@ -157,9 +157,6 @@ class SfMWorkflow:
             self.input_dir = input_dir
         else:
             raise Exception("ERROR: Input directory provided doesn't exist; please check input")
-
-        # Set the output directory
-        self.output_dir = output_dir
         
         # Set the output directory name
         if output_name:
@@ -167,8 +164,13 @@ class SfMWorkflow:
         else:
             self.output_name = get_now()
         
+        # Check if the output directory is the same as the output name
+        if os.path.basename(output_dir) == self.output_name:
+            self.output_dir = os.path.dirname(self.output_dir)
+        else:
+            self.output_dir = f"{self.output_dir}/{self.output_name}"
+        
         # Create the output directory
-        self.output_dir = f"{self.output_dir}/{self.output_name}"
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Create filenames for data outputs
