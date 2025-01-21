@@ -41,17 +41,6 @@ def announce(announcement: str):
     print(announcement)
     print("###############################################\n")
     
-    
-def get_now():
-    """
-    Returns a timestamp; used for file and folder names
-    """
-    # Get the current datetime
-    now = datetime.datetime.now()
-    now = now.strftime("%Y-%m-%d_%H-%M-%S")
-
-    return now
-
 
 def get_gpu_mask(device: int):
     """
@@ -162,7 +151,7 @@ class SfMWorkflow:
         if output_name:
             self.output_name = output_name
         else:
-            self.output_name = get_now()
+            self.output_name = os.path.basename(self.input_dir)
             
         self.output_dir = f"{output_dir}/{self.output_name}"
         os.makedirs(self.output_dir, exist_ok=True)
@@ -775,16 +764,16 @@ class SfMWorkflow:
 
 def main():
     parser = argparse.ArgumentParser(description='Run the Structure from Motion workflow.')
-    parser.add_argument('input_path', type=str,
+    parser.add_argument('--input_path', type=str,
                         help='Path to the input directory')
     
-    parser.add_argument('project_file', type=str, default="",
+    parser.add_argument('--project_file', type=str, default="",
                         help='Path to the project file')
     
-    parser.add_argument('output_name', type=str, default="",
+    parser.add_argument('--output_name', type=str, default="",
                         help='Name of the output project')
 
-    parser.add_argument('output_path', type=str,
+    parser.add_argument('--output_path', type=str,
                         help='Path to the output directory')
 
     parser.add_argument('--device', type=int, default=0,

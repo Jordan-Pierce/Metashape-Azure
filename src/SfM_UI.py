@@ -552,7 +552,7 @@ class SfMWorkflowApp(QDialog):
 
             # create linux command line commands to be sent to the compute target
             command_args = [
-                f'python SfM.py ${{inputs.input_data}} ${{outputs.output_data}}',
+                f'python SfM.py --input_dir ${{inputs.input_data}} --output_dir ${{outputs.output_data}}',
                 f'--device {self.device_input.value()}',
                 f'--quality {self.quality_input.currentText()}',
                 f'--target_percentage {self.target_percentage_input.value()}',
@@ -560,12 +560,6 @@ class SfMWorkflowApp(QDialog):
 
             if self.detect_markers_input.currentText() == 'True':
                 command_args.append('--detect_markers')
-                
-            # Remove the export_viscore flag from export_functions
-            export_viscore = self.export_functions.pop('export_viscore')
-            # Add the export_viscore flag to the command_args
-            if export_viscore.isChecked():
-                command_args.append('--export_viscore')
 
             for function_name, checkbox in self.building_functions.items():
                 if checkbox.isChecked():
