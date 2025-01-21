@@ -7,6 +7,22 @@ conda create --name sfm python=3.8 -y
 conda activate sfm
 
 pip install "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
+```
+
+If you are also running Metashape locally, you will need to run the install script as well:
+
+```bash
+# cmd
+
+conda activate sfm
+
+python install.py
+```
+
+Finally, to run the application, use the following command:
+
+```bash
+# cmd
 
 metashape-azure-mls
 ```

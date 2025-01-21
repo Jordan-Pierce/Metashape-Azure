@@ -1,10 +1,13 @@
-import argparse
 import os
 import time
+import datetime
+import json
+import argparse
 import traceback
 
 import numpy as np
 from packaging import version
+
 
 # -----------------------------------------------------------------------------------------------------------
 # Version Checks
@@ -29,6 +32,7 @@ if found_version < compatible_version:
 # Functions
 # -----------------------------------------------------------------------------------------------------------
 
+
 def announce(announcement: str):
     """
     Gabriel's message to the world.
@@ -36,6 +40,17 @@ def announce(announcement: str):
     print("\n###############################################")
     print(announcement)
     print("###############################################\n")
+    
+    
+def get_now():
+    """
+    Returns a timestamp; used for file and folder names
+    """
+    # Get the current datetime
+    now = datetime.datetime.now()
+    now = now.strftime("%Y-%m-%d_%H-%M-%S")
+
+    return now
 
 
 def get_gpu_mask(device: int):
@@ -105,6 +120,7 @@ class SfMWorkflow:
                  device,
                  input_dir,
                  project_file,
+                 output_name,
                  output_dir,
                  quality='high',
                  target_percentage=10,
@@ -118,6 +134,8 @@ class SfMWorkflow:
                  build_texture=True,
                  build_dem=True,
                  build_ortho=True,
+                 export_viscore=True,
+                 export_meta=True,
                  export_cameras=True,
                  export_point_cloud=True,
                  export_potree=True,
@@ -141,7 +159,12 @@ class SfMWorkflow:
             raise Exception("ERROR: Input directory provided doesn't exist; please check input")
 
         # Create the output directory
-        self.output_dir = output_dir
+        if output_name:
+            self.output_name = output_name
+        else:
+            self.output_name = get_now()
+            
+        self.output_dir = f"{output_dir}/{self.output_name}"
         os.makedirs(self.output_dir, exist_ok=True)
 
         # Create filenames for data outputs
@@ -152,7 +175,16 @@ class SfMWorkflow:
         self.output_texture = f"{self.output_dir}/Texture.jpg"
         self.output_ortho = f"{self.output_dir}/Orthomosaic.tif"
         self.output_cameras = f"{self.output_dir}/Cameras.xml"
+        self.output_meta = f"{self.output_dir}/Meta.json"
         self.output_report = f"{self.output_dir}/Report.pdf"
+        
+        # Set the export viscore flag
+        self.export_viscore_flag = export_viscore
+        
+        if self.export_viscore_flag:
+            self.output_dense = f"{self.output_dir}/{self.output_name}.ply"
+            self.output_cameras = f"{self.output_dir}/{self.output_name}.cams.xml"
+            self.output_meta = f"{self.output_dir}/{self.output_name}.meta.json"
 
         # Validate and set the quality
         self.quality = quality
@@ -168,10 +200,10 @@ class SfMWorkflow:
         Metashape.app.gpu_mask = get_gpu_mask(device=self.device)
         self.doc = Metashape.Document()
 
-        self.project_file = "project.psx"
+        self.project_file = f"{self.output_name}.psx"
         if not os.path.exists(self.project_file):
             print(f"NOTE: Creating new project file")
-            self.project_file = f"{self.output_dir}/project.psx"
+            self.project_file = f"{self.output_dir}/{self.output_name}.psx"
             self.doc.save(self.project_file)
         else:
             print(f"NOTE: Opening existing project file")
@@ -195,6 +227,8 @@ class SfMWorkflow:
         self.build_dem_flag = build_dem
         self.build_ortho_flag = build_ortho
 
+        self.export_viscore_flag = export_viscore
+        self.export_meta_flag = export_meta
         self.export_cameras_flag = export_cameras
         self.export_point_cloud_flag = export_point_cloud
         self.export_potree_flag = export_potree
@@ -380,6 +414,7 @@ class SfMWorkflow:
         if chunk.depth_maps and not chunk.point_cloud:
             announce("Building dense point cloud")
             chunk.buildPointCloud(source_data=Metashape.DepthMapsData,
+                                  point_confidence=True,
                                   progress=print_progress)
             print("")
             print("Process Successful!")
@@ -450,6 +485,43 @@ class SfMWorkflow:
             print("")
             print("Process Successful!")
             self.doc.save()
+            
+    def export_meta(self):
+        """
+
+        """
+        chunk = self.doc.chunk
+
+        if chunk.cameras:
+            announce("Exporting Meta Data")
+            
+            camera_data = {}
+            # Loop through all cameras
+            for camera in chunk.cameras:
+                # Get camera center coordinates
+                center = None
+                if camera.center is not None:
+                    geo = chunk.transform.matrix.mulp(camera.center)
+                    center = list(chunk.crs.project(geo)) if chunk.crs else list(camera.center)
+
+                # Get camera transform matrix 
+                transform = None
+                if camera.transform:
+                    transform = [list(camera.transform.row(n)) for n in range(camera.transform.size[1])]
+
+                # Store camera metadata
+                camera_data[camera.key] = {
+                    'path': camera.photo.path,
+                    'center': center,
+                    'transform': transform
+                }
+
+            # Write metadata to JSON file
+            with open(self.output_meta, 'w') as f:
+                json.dump({'cameras': camera_data}, f, indent=4)
+
+            print("Successfully exported camera metadata")
+            self.doc.save()
 
     def export_cameras(self):
         """
@@ -475,11 +547,12 @@ class SfMWorkflow:
             announce("Exporting dense point cloud")
             chunk.exportPointCloud(path=self.output_dense,
                                    save_point_color=True,
-                                   save_point_classification=True,
+                                   save_point_classification=False,
                                    save_point_normal=True,
                                    save_point_confidence=True,
                                    crs=chunk.crs,
                                    progress=print_progress)
+
             print("")
             print("Process Successful!")
             self.doc.save()
@@ -632,6 +705,12 @@ class SfMWorkflow:
                 self.build_ortho()
             except Exception as e:
                 print(f"ERROR in build_ortho: {e}")
+                
+        if self.export_meta_flag:
+            try:
+                self.export_meta()
+            except Exception as e:
+                print(f"ERROR in export_meta: {e}")
 
         if self.export_cameras_flag:
             try:
@@ -698,6 +777,12 @@ def main():
     parser = argparse.ArgumentParser(description='Run the Structure from Motion workflow.')
     parser.add_argument('input_path', type=str,
                         help='Path to the input directory')
+    
+    parser.add_argument('project_file', type=str, default="",
+                        help='Path to the project file')
+    
+    parser.add_argument('output_name', type=str, default="",
+                        help='Name of the output project')
 
     parser.add_argument('output_path', type=str,
                         help='Path to the output directory')
@@ -741,6 +826,12 @@ def main():
 
     parser.add_argument('--build_ortho', action='store_true',
                         help='Build orthomosaic')
+    
+    parser.add_argument('--export_viscore', action='store_true',
+                        help='Export Viscore formatted metadata')
+    
+    parser.add_argument('--export_meta', action='store_true',
+                        help='Export meta formatted metadata')
 
     parser.add_argument('--export_cameras', action='store_true',
                         help='Export cameras')
@@ -771,7 +862,8 @@ def main():
     try:
         workflow = SfMWorkflow(device=args.device,
                                input_dir=args.input_path,
-                               project_file="",
+                               project_file=args.project_file,
+                               output_name=args.output_name,
                                output_dir=args.output_path,
                                quality=args.quality,
                                target_percentage=args.target_percentage,
@@ -785,6 +877,8 @@ def main():
                                build_texture=args.build_texture,
                                build_dem=args.build_dem,
                                build_ortho=args.build_ortho,
+                               export_viscore=args.export_viscore,
+                               export_meta=args.export_meta,
                                export_cameras=args.export_cameras,
                                export_point_cloud=args.export_point_cloud,
                                export_potree=args.export_potree,
