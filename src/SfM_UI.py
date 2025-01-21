@@ -529,34 +529,33 @@ class SfMWorkflowApp(QDialog):
             print(f"Submitting job to compute: {self.compute_name}")
 
             # load in the input data information from the function def
-            input_path = self.input_dir
+            input_dir = self.input_dir
             input_mode = InputOutputModes.DOWNLOAD  # RO_MOUNT
 
             # load in the output data info from the function def
-            output_path = os.path.join(self.output_dir, self.output_name)
+            output_dir = os.path.join(self.output_dir, self.output_name)
             output_mode = InputOutputModes.UPLOAD
 
             # get a local instance of the compute info
             compute = self.ml_client.compute.get(self.compute_name)
 
             # create input and output dictionaries to use in the command calls later
-
             input = {
                 "input_data": Input(type=AssetTypes.URI_FOLDER,  # URI_FILE
-                                    path=input_path,
+                                    path=input_dir,
                                     mode=input_mode)
             }
             output = {
                 "output_data": Output(type=AssetTypes.URI_FOLDER,
-                                      path=output_path,
+                                      path=output_dir,
                                       mode=output_mode)
             }
 
             # create linux command line commands to be sent to the compute target
             command_args = [
                 f'python SfM.py',
-                f'--input_path ${{inputs.input_data}}',
-                f'--output_path ${{outputs.output_data}}',
+                f'--input_dir ${{inputs.input_data}}',
+                f'--output_dir ${{outputs.output_data}}',
                 f'--output_name {self.output_name}',
                 f'--device {self.device_input.value()}',
                 f'--quality {self.quality_input.currentText()}',

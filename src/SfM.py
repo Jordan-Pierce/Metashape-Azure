@@ -164,11 +164,14 @@ class SfMWorkflow:
         else:
             self.output_name = get_now()
         
+        # Remove any trailing slashes from output_dir
+        output_dir = output_dir.rstrip('cls/\\')
+        
         # Check if the output directory is the same as the output name
         if os.path.basename(output_dir) == self.output_name:
-            self.output_dir = os.path.dirname(self.output_dir)
+            self.output_dir = os.path.dirname(output_dir)
         else:
-            self.output_dir = f"{self.output_dir}/{self.output_name}"
+            self.output_dir = os.path.join(output_dir, self.output_name)
         
         # Create the output directory
         os.makedirs(self.output_dir, exist_ok=True)
@@ -781,7 +784,7 @@ class SfMWorkflow:
 
 def main():
     parser = argparse.ArgumentParser(description='Run the Structure from Motion workflow.')
-    parser.add_argument('--input_path', type=str,
+    parser.add_argument('--input_dir', type=str,
                         help='Path to the input directory')
     
     parser.add_argument('--project_file', type=str, default="",
@@ -790,7 +793,7 @@ def main():
     parser.add_argument('--output_name', type=str,
                         help='Name of the output project')
 
-    parser.add_argument('--output_path', type=str,
+    parser.add_argument('--output_dir', type=str,
                         help='Path to the output directory')
 
     parser.add_argument('--device', type=int, default=0,
@@ -867,10 +870,10 @@ def main():
 
     try:
         workflow = SfMWorkflow(device=args.device,
-                               input_dir=args.input_path,
+                               input_dir=args.input_dir,
                                project_file=args.project_file,
                                output_name=args.output_name,
-                               output_dir=args.output_path,
+                               output_dir=args.output_dir,
                                quality=args.quality,
                                target_percentage=args.target_percentage,
                                detect_markers=args.detect_markers,
