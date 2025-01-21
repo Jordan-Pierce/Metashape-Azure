@@ -165,7 +165,7 @@ class SfMWorkflow:
             self.output_name = get_now()
         
         # Remove any trailing slashes from output_dir
-        output_dir = output_dir.rstrip('cls/\\')
+        output_dir = output_dir.rstrip('/\\')
         
         # Check if the output directory is the same as the output name
         if os.path.basename(output_dir) == self.output_name:
