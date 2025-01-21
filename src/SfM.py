@@ -164,11 +164,12 @@ class SfMWorkflow:
         else:
             self.output_name = get_now()
         
-        # Remove any trailing slashes from output_dir
-        output_dir = output_dir.rstrip('/\\')
+        print(f"NOTE: Output name set to {self.output_name}")
+        print(f"NOTE: Output directory set to {output_dir}")
+        print(f"{os.path.basename(output_dir).rstrip('/\\')}, {self.output_name}")
         
         # Check if the output directory is the same as the output name
-        if os.path.basename(output_dir) == self.output_name:
+        if os.path.basename(output_dir).rstrip('/\\') == self.output_name:
             self.output_dir = os.path.dirname(output_dir)
         else:
             self.output_dir = os.path.join(output_dir, self.output_name)
