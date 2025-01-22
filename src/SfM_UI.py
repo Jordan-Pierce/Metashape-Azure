@@ -127,7 +127,7 @@ class SfMWorkflowApp(QDialog):
         credentials_form.addRow('Subscription ID:', self.subscription_id_input)
         credentials_form.addRow('Resource Group:', self.resource_group_input)
         credentials_form.addRow('Workspace Name:', self.workspace_name_input)
-        credentials_form.addRow('Computes:', self.computes_input)
+        credentials_form.addRow('Computes Running:', self.computes_input)
         cloud_layout.addLayout(credentials_form)
         
         # Authentication Buttons
@@ -194,7 +194,7 @@ class SfMWorkflowApp(QDialog):
         
         self.target_percentage_input = QSpinBox(self)
         self.target_percentage_input.setRange(0, 100)
-        self.target_percentage_input.setValue(10)
+        self.target_percentage_input.setValue(5)
         params_form.addRow("Target Percentage:", self.target_percentage_input)
         
         self.detect_markers_input = QComboBox(self)
@@ -381,30 +381,16 @@ class SfMWorkflowApp(QDialog):
         try:
             compute_list = list(self.ml_client.compute.list())
             for compute in compute_list:
-                self.computes_input.addItem(f"{compute.name}")
+                if compute._type == 'amlcompute':
+                    self.computes_input.addItem(f"{compute.name}")
+                elif compute._type == 'computeinstance':
+                    if 'Running' in compute._state:
+                        self.computes_input.addItem(f"{compute.name}")
+                else:
+                    pass
+                
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
-
-    def get_compute_status(self, compute):
-        """Get the status of a compute instance."""
-        try:
-            # Check the provisioning state
-            provisioning_state = getattr(compute, 'provisioning_state', None)
-            print(compute.status)
-            if provisioning_state:
-                if provisioning_state.lower() == 'succeeded':
-                    # Check if the compute is running
-                    if hasattr(compute, 'status') and compute.status.lower() == 'running':
-                        return "Running"
-                    else:
-                        return "Stopped"
-                else:
-                    return provisioning_state
-
-            # If no provisioning state found, return unknown status
-            return "Unknown status"
-        except Exception as e:
-            return f"Error: {str(e)}"
 
     def get_azure_compute(self):
         """Method to get the selected compute option."""
