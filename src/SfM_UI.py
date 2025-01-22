@@ -70,7 +70,7 @@ class SfMWorkflowApp(QDialog):
         self.setWindowTitle("SfM Workflow")
         main_window_icon_path = get_icon_path("duck.png")
         self.setWindowIcon(QIcon(main_window_icon_path))
-        self.resize(1000, 500)
+        self.resize(1000, 400)
         
         # Add window flags to allow minimize
         self.setWindowFlags(self.windowFlags() | 
@@ -89,8 +89,8 @@ class SfMWorkflowApp(QDialog):
         self.detect_markers_input = None
         self.computes_input = None
         self.computes_list = []
-        self.input_uri_input = None
-        self.output_uri_input = None
+        self.input_path_input = None
+        self.output_path_input = None
         self.output_name_input = None
 
         # Create dictionaries for building and export functions
@@ -144,24 +144,24 @@ class SfMWorkflowApp(QDialog):
         azure_layout.addWidget(cloud_groupbox)
 
         # IO Section
-        azure_layout.addSpacing(50)
+        azure_layout.addSpacing(55)
         
         # Create IO Group Box
         io_groupbox = QGroupBox("Input / Output")
         io_layout = QVBoxLayout()
 
-        io_description = QLabel("Enter the input and output paths below")
+        io_description = QLabel("Enter the input and output paths below; URI (Azure) or local path")
         io_description.setWordWrap(True)
         io_layout.addWidget(io_description)
         
         io_form = QFormLayout()
-        self.input_uri_input = QLineEdit()
-        self.output_uri_input = QLineEdit()
+        self.input_path_input = QLineEdit()
+        self.output_path_input = QLineEdit()
         self.output_name_input = QLineEdit()
         self.output_name_input.setText(f"project_{get_now()}")
         
-        io_form.addRow("Input URI:", self.input_uri_input)
-        io_form.addRow("Output URI:", self.output_uri_input)
+        io_form.addRow("Input Path:", self.input_path_input)
+        io_form.addRow("Output Path:", self.output_path_input)
         io_form.addRow("Output Name:", self.output_name_input)
         io_layout.addLayout(io_form)
 
@@ -274,13 +274,13 @@ class SfMWorkflowApp(QDialog):
         # Run Local Button
         run_local_button = QPushButton('Run Locally')
         run_local_button.clicked.connect(self.run_workflow_locally)
-        run_local_button.setStyleSheet("background-color: red; color: white;")
+        run_local_button.setStyleSheet("background-color: rgba(255, 0, 0, 0.7); color: white;")
         run_button_layout.addWidget(run_local_button)
         
         # Run Azure Button
         run_azure_button = QPushButton('Run on Azure')
         run_azure_button.clicked.connect(self.run_workflow_azure)
-        run_azure_button.setStyleSheet("background-color: green; color: white;")
+        run_azure_button.setStyleSheet("background-color: rgba(0, 255, 0, 0.7); color: white;")
         run_button_layout.addWidget(run_azure_button)
         
         # Add run buttons to right panel
@@ -427,17 +427,17 @@ class SfMWorkflowApp(QDialog):
             self.device = int(self.device_input.value())
 
             # Method calls to get input / output strings
-            self.input_dir = self.input_uri_input.text()
-            self.output_dir = self.output_uri_input.text()
+            self.input_dir = self.input_path_input.text()
+            self.output_dir = self.output_path_input.text()
             self.output_name = self.output_name_input.text()
             
             # Validate input / output strings
             if not self.input_dir:
-                QMessageBox.critical(self, 'Error', "Please enter an input URI!")
+                QMessageBox.critical(self, 'Error', "Please enter an input path!")
                 return
             
             if not self.output_dir:
-                QMessageBox.critical(self, 'Error', "Please enter an output URI!")
+                QMessageBox.critical(self, 'Error', "Please enter an output path!")
                 return
             
             if not self.output_name:
@@ -622,7 +622,7 @@ def main_function():
 if __name__ == "__main__":
     try:
         import Metashape
-
+        raise Exception("")  # TODO
         label = "Scripts/Metashape-Azure"
         Metashape.app.addMenuItem(label, metashape_app)
         print("To execute this script press {}".format(label))

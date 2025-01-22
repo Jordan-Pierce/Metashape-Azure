@@ -168,8 +168,8 @@ class SfMWorkflow:
         print(f"NOTE: Output directory set to {output_dir}")
         
         # Check if the output directory is the same as the output name
-        if os.path.basename(output_dir).rstrip('/\\') == self.output_name:
-            self.output_dir = os.path.dirname(output_dir)
+        if self.output_name in output_dir:
+            self.output_dir = output_dir
         else:
             self.output_dir = os.path.join(output_dir, self.output_name)
         
