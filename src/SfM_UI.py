@@ -530,7 +530,7 @@ class SfMWorkflowApp(QDialog):
 
             # load in the input data information from the function def
             input_dir = self.input_dir
-            input_mode = InputOutputModes.DOWNLOAD  # RO_MOUNT
+            input_mode = InputOutputModes.DOWNLOAD
 
             # load in the output data info from the function def
             output_dir = os.path.join(self.output_dir, self.output_name)
@@ -541,7 +541,7 @@ class SfMWorkflowApp(QDialog):
 
             # create input and output dictionaries to use in the command calls later
             input = {
-                "input_data": Input(type=AssetTypes.URI_FOLDER,  # URI_FILE
+                "input_data": Input(type=AssetTypes.URI_FOLDER,
                                     path=input_dir,
                                     mode=input_mode)
             }
