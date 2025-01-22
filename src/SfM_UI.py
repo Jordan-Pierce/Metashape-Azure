@@ -608,7 +608,7 @@ def main_function():
 if __name__ == "__main__":
     try:
         import Metashape
-        raise Exception("")  # TODO
+
         label = "Scripts/Metashape-Azure"
         Metashape.app.addMenuItem(label, metashape_app)
         print("To execute this script press {}".format(label))
