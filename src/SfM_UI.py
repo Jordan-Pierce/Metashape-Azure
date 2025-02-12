@@ -428,6 +428,10 @@ class SfMWorkflowApp(QDialog):
             
             if not self.output_name:
                 self.output_name = get_now()
+                
+            # Dummy proof the slashes in the paths
+            self.input_dir = self.input_dir.replace("\\", "/")
+            self.output_dir = self.output_dir.replace("\\", "/")
 
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
