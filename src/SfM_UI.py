@@ -429,10 +429,44 @@ class SfMWorkflowApp(QDialog):
             if not self.output_name:
                 self.output_name = get_now()
                 
-            # Dummy proof the slashes in the paths
-            self.input_dir = self.input_dir.replace("\\", "/")
-            self.output_dir = self.output_dir.replace("\\", "/")
-
+            # Convert drive letter paths to double-slashed format
+            if ':\\' in self.input_dir:
+                drive = self.input_dir.split(':\\')[0]
+                path = self.input_dir.split(':\\')[1]
+                self.input_dir = f'{drive}://{path}'
+                    
+            if ':\\' in self.output_dir:
+                drive = self.output_dir.split(':\\')[0]
+                path = self.output_dir.split(':\\')[1]
+                self.output_dir = f'{drive}://{path}'
+                    
+            # Normalize path separators, preserving leading double slashes
+            if '://' in self.input_dir:
+                protocol = self.input_dir.split('://')[0] + '://'
+                path = self.input_dir.split('://')[1]
+                self.input_dir = protocol + os.path.normpath(path).replace('\\', '/')
+            else:
+                self.input_dir = os.path.normpath(self.input_dir).replace('\\', '/')
+                
+            if '://' in self.output_dir:
+                protocol = self.output_dir.split('://')[0] + '://'
+                path = self.output_dir.split('://')[1]
+                self.output_dir = protocol + os.path.normpath(path).replace('\\', '/')
+            else:
+                self.output_dir = os.path.normpath(self.output_dir).replace('\\', '/')
+            
+            # Strip leading and trailing whitespace
+            self.output_dir = self.output_dir.strip()
+            self.output_name = self.output_name.strip()
+            
+            output_path = f"{self.output_dir}/{self.output_name}"
+            print("Input Path:", self.input_dir)
+            print("Output Path:", output_path)
+            
+            if os.path.exists(output_path):
+                QMessageBox.critical(self, 'Error', "Output directory already exists!")
+                return
+                
             self.quality = self.quality_input.currentText()
             self.target_percentage = self.target_percentage_input.value()
             self.detect_markers = self.detect_markers_input.currentText() == 'True'
@@ -523,7 +557,7 @@ class SfMWorkflowApp(QDialog):
             input_mode = InputOutputModes.DOWNLOAD
 
             # load in the output data info from the function def
-            output_dir = os.path.join(self.output_dir, self.output_name)
+            output_dir = f"{self.output_dir}/{self.output_name}"
             output_mode = InputOutputModes.UPLOAD
 
             # get a local instance of the compute info
