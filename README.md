@@ -9,17 +9,16 @@ conda activate sfm
 pip install "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
 ```
 
-If you are also running Metashape locally, you will need to run the install script as well:
+If you are also running Metashape `locally`, you will need to run the `install.py` script as well:
 
 ```bash
 # cmd
 
-conda activate sfm
-
 python install.py
 ```
 
-Finally, to run the application, use the following command:
+This will add dependencies to the `Metashape` python environment. Finally, to run the application, use the following 
+command:
 
 ```bash
 # cmd
@@ -27,11 +26,30 @@ Finally, to run the application, use the following command:
 metashape-azure-mls
 ```
 
-### Notes
-
-- If authentication opens any browser other than `Edge`, please copy the URL and paste it into `Edge` to authenticate, as required from the `Azure` SDK.
-- You must be connected to the network (i.e., `VPN`) to access the `Azure` services.
-
 <p align="center">
   <img src="figures/GUI.PNG" alt="Metashape-Azure-MLS">
 </p>
+
+### Running the Application
+
+1.) Go to [Azure Machine Learning Studio](https://ml.azure.com/) on `Microsoft Edge`; login
+2.) Navigate to your workspace
+2.) Copy the following account parameter credentials (top-right) into the application:
+  - Subscription ID
+  - Resource Group
+  - Workspace Name
+3.) Save your credentials for the future
+4.) Authenticate
+5.) Choose the compute (cluster)
+6.) Provide the input path (folder containing images) as an Azure URI
+7.) Provide the output path (folder to contain the project) as an Azure URI
+8.) Provide the project name
+  - The following cannot already exist {output path}/{project name}
+9.) Choose the SfM parameters
+10.) Click "Run on Azure"
+
+### Notes
+
+- Azure Machine Learning Studio and Authentication must be done in `Microsoft Edge`
+- You must be connected to the network (i.e., `VPN`) to access the `Azure` services.
+

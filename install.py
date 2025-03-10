@@ -8,8 +8,7 @@ requirements = ["numpy==1.21.4",
                 "azure-identity",
                 "azure-ai-ml",
                 "azure-cli",
-                "pyqt5",
-                "./packages/Metashape-2.1.2-cp37.cp38.cp39.cp310.cp311-none-win_amd64.whl"]
+                "pyqt5"]
 
 # Define the command to install the requirements
 commands = [metashape_exe,

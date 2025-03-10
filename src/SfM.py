@@ -288,8 +288,8 @@ class SfMWorkflow:
         """
 
         """
-        if not type(self.target_percentage) == int and 0 < self.target_percentage < 100:
-            raise Exception(f"ERROR: Target percentage must be int between 0 and 100")
+        if not isinstance(self.target_percentage, int) or not (0 <= self.target_percentage <= 100):
+            raise Exception("ERROR: Target percentage must be int between 0 and 100")
 
     def add_photos(self):
         """
