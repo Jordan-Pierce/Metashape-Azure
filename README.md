@@ -32,21 +32,23 @@ metashape-azure-mls
 
 ### Running the Application
 
-1.) Go to [Azure Machine Learning Studio](https://ml.azure.com/) on `Microsoft Edge`; login
-2.) Navigate to your workspace
-2.) Copy the following account parameter credentials (top-right) into the application:
+### Running the Application
+
+1. Go to [Azure Machine Learning Studio](https://ml.azure.com/) on `Microsoft Edge` and login
+2. Navigate to your workspace
+3. Copy the following account parameter credentials (top-right) into the application:
   - Subscription ID
   - Resource Group
   - Workspace Name
-3.) Save your credentials for the future
-4.) Authenticate
-5.) Choose the compute (cluster)
-6.) Provide the input path (folder containing images) as an Azure URI
-7.) Provide the output path (folder to contain the project) as an Azure URI
-8.) Provide the project name
-  - The following cannot already exist {output path}/{project name}
-9.) Choose the SfM parameters
-10.) Click "Run on Azure"
+4. Save your credentials for future use
+5. Authenticate
+6. Choose the compute (cluster)
+7. Provide the input path (folder containing images) as an Azure URI
+8. Provide the output path (folder to contain the project) as an Azure URI
+9. Provide the project name
+  - Note: The path `{output path}/{project name}` cannot already exist
+10. Choose the SfM parameters
+11. Click "Run on Azure"
 
 ### Notes
 
