@@ -8,16 +8,17 @@ import json
 import os
 import sys
 import datetime
+import requests
 import traceback
 import pkg_resources
 
-import requests
+import qdarktheme
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (QTabWidget, QFileDialog, QVBoxLayout, QWidget, QPushButton, 
                              QLineEdit, QGroupBox, QLabel, QSpinBox, QComboBox, QCheckBox, 
                              QScrollArea, QDialog, QMessageBox, QApplication, QHBoxLayout,
-                             QFormLayout)
+                             QFormLayout, QDoubleSpinBox)
 
 from azure.ai.ml import MLClient, Input, Output, command
 from azure.ai.ml.constants import AssetTypes, InputOutputModes
@@ -70,12 +71,13 @@ class SfMWorkflowApp(QDialog):
         self.setWindowTitle("SfM Workflow")
         main_window_icon_path = get_icon_path("duck.png")
         self.setWindowIcon(QIcon(main_window_icon_path))
-        self.resize(1000, 400)
+        self.resize(1500, 600)
         
-        # Add window flags to allow minimize
+        # Add window flags to allow minimize and maximize buttons and show in fullscreen
         self.setWindowFlags(self.windowFlags() | 
-                            Qt.WindowMinimizeButtonHint)
-
+                            Qt.WindowMinimizeButtonHint |
+                            Qt.WindowMaximizeButtonHint)
+        
         # Config path
         self.config_path = os.path.expanduser("~/.azureml/config.json")
 
@@ -84,8 +86,16 @@ class SfMWorkflowApp(QDialog):
         self.resource_group_input = None
         self.workspace_name_input = None
         self.device_input = None
-        self.quality_input = None
-        self.target_percentage_input = None
+        
+        # Replace target_percentage_input with four new inputs
+        self.reprojection_error_input = None
+        self.reconstruction_uncertainty_input = None
+        self.projection_accuracy_input = None
+        
+        # Add keypoint and tiepoint limit inputs
+        self.keypoint_limit_input = None
+        self.tiepoint_limit_input = None
+        
         self.detect_markers_input = None
         self.computes_input = None
         self.computes_list = []
@@ -113,7 +123,7 @@ class SfMWorkflowApp(QDialog):
         cloud_layout = QVBoxLayout()
 
         # Cloud Credentials Section
-        credentials_description = QLabel("Enter your Azure credentials below")
+        credentials_description = QLabel("\nEnter your Azure credentials below")
         credentials_description.setWordWrap(True)
         cloud_layout.addWidget(credentials_description)
         
@@ -122,16 +132,14 @@ class SfMWorkflowApp(QDialog):
         self.subscription_id_input = QLineEdit(self)
         self.resource_group_input = QLineEdit(self)
         self.workspace_name_input = QLineEdit(self)
-        self.computes_input = QComboBox(self)
         
         credentials_form.addRow('Subscription ID:', self.subscription_id_input)
         credentials_form.addRow('Resource Group:', self.resource_group_input)
         credentials_form.addRow('Workspace Name:', self.workspace_name_input)
-        credentials_form.addRow('Computes Running:', self.computes_input)
         cloud_layout.addLayout(credentials_form)
         
-        # Authentication Buttons
-        button_layout = QHBoxLayout()
+        # Authentication Buttons - Now stacked vertically
+        button_layout = QVBoxLayout()
         save_credentials_button = QPushButton('Save Credentials')
         save_credentials_button.clicked.connect(self.save_credentials)
         authenticate_button = QPushButton('Authenticate')
@@ -142,15 +150,32 @@ class SfMWorkflowApp(QDialog):
 
         cloud_groupbox.setLayout(cloud_layout)
         azure_layout.addWidget(cloud_groupbox)
-
-        # IO Section
-        azure_layout.addSpacing(55)
         
-        # Create IO Group Box
-        io_groupbox = QGroupBox("Input / Output")
+        # Create Compute Parameters Group Box
+        compute_groupbox = QGroupBox("Compute Parameters")
+        compute_layout = QVBoxLayout()
+        
+        compute_description = QLabel("\nSelect a compute instance to run the workflow after authenticating")
+        compute_description.setWordWrap(True)
+        compute_layout.addWidget(compute_description)
+        
+        compute_form = QFormLayout()
+        self.computes_input = QComboBox(self)
+        compute_form.addRow('Computes Running:', self.computes_input)
+        compute_layout.addLayout(compute_form)
+        
+        compute_groupbox.setLayout(compute_layout)
+        azure_layout.addWidget(compute_groupbox)
+
+        azure_group.setLayout(azure_layout)
+        return azure_group
+
+    def create_io_panel(self):
+        """Create a panel for input/output parameters."""
+        io_group = QGroupBox("Input / Output")
         io_layout = QVBoxLayout()
 
-        io_description = QLabel("Enter the input and output paths below; URI (Azure) or local path")
+        io_description = QLabel("\nEnter the input and output paths below; URI (Azure) or local path")
         io_description.setWordWrap(True)
         io_layout.addWidget(io_description)
         
@@ -165,18 +190,58 @@ class SfMWorkflowApp(QDialog):
         io_form.addRow("Output Name:", self.output_name_input)
         io_layout.addLayout(io_form)
 
-        io_groupbox.setLayout(io_layout)
-        azure_layout.addWidget(io_groupbox)
+        io_group.setLayout(io_layout)
+        return io_group
 
-        azure_group.setLayout(azure_layout)
-        return azure_group
+    def create_points_panel(self):
+        """Create a panel for keypoint and tiepoint parameters."""
+        points_group = QGroupBox("Point Limit Parameters")
+        points_layout = QFormLayout()
+        
+        # Keypoint and Tiepoint Parameters
+        self.keypoint_limit_input = QSpinBox(self)
+        self.keypoint_limit_input.setRange(0, 1000000)
+        self.keypoint_limit_input.setValue(40000)
+        points_layout.addRow("Keypoint Limit:", self.keypoint_limit_input)
+        
+        self.tiepoint_limit_input = QSpinBox(self)
+        self.tiepoint_limit_input.setRange(0, 1000000)
+        self.tiepoint_limit_input.setValue(10000)
+        points_layout.addRow("Tiepoint Limit:", self.tiepoint_limit_input)
+        
+        points_group.setLayout(points_layout)
+        return points_group
+
+    def create_error_reduction_panel(self):
+        """Create a panel for error reduction parameters."""
+        error_group = QGroupBox("Error Reduction Parameters")
+        error_layout = QFormLayout()
+        
+        # Error Reduction Parameters
+        self.reprojection_error_input = QSpinBox(self)
+        self.reprojection_error_input.setRange(0, 100)
+        self.reprojection_error_input.setValue(10)
+        error_layout.addRow("Reprojection Error:", self.reprojection_error_input)
+        
+        self.reconstruction_uncertainty_input = QSpinBox(self)
+        self.reconstruction_uncertainty_input.setRange(0, 100)
+        self.reconstruction_uncertainty_input.setValue(50)
+        error_layout.addRow("Reconstruction Uncertainty:", self.reconstruction_uncertainty_input)
+        
+        self.projection_accuracy_input = QSpinBox(self)
+        self.projection_accuracy_input.setRange(0, 100)
+        self.projection_accuracy_input.setValue(50)
+        error_layout.addRow("Projection Accuracy:", self.projection_accuracy_input)
+        
+        error_group.setLayout(error_layout)
+        return error_group
 
     def create_sfm_panel(self):
         # Create SfM Functions Group
         sfm_group = QGroupBox("SfM Parameters")
         sfm_layout = QVBoxLayout()
         
-        sfm_description = QLabel("Select the functions to run below")
+        sfm_description = QLabel("\nSelect the functions to run below")
         sfm_description.setWordWrap(True)
         sfm_layout.addWidget(sfm_description)
         
@@ -187,16 +252,6 @@ class SfMWorkflowApp(QDialog):
         self.device_input.setValue(0)
         params_form.addRow("Device:", self.device_input)
         
-        self.quality_input = QComboBox(self)
-        self.quality_input.addItems(['lowest', 'low', 'medium', 'high', 'highest'])
-        self.quality_input.setCurrentText('medium')
-        params_form.addRow("Quality:", self.quality_input)
-        
-        self.target_percentage_input = QSpinBox(self)
-        self.target_percentage_input.setRange(0, 100)
-        self.target_percentage_input.setValue(5)
-        params_form.addRow("Target Percentage:", self.target_percentage_input)
-        
         self.detect_markers_input = QComboBox(self)
         self.detect_markers_input.addItems(['True', 'False'])
         self.detect_markers_input.setCurrentText('False')
@@ -204,19 +259,40 @@ class SfMWorkflowApp(QDialog):
         
         sfm_layout.addLayout(params_form)
         
-        # Initialize checkboxes
-        self.building_functions = {
-            "add_photos": QCheckBox("Add Photos", self),
-            "align_cameras": QCheckBox("Align Cameras", self),
-            "optimize_cameras": QCheckBox("Optimize Cameras", self),
-            "build_depth_maps": QCheckBox("Build Depth Maps", self),
-            "build_point_cloud": QCheckBox("Build Point Cloud", self),
-            "build_mesh": QCheckBox("Build Mesh", self),
-            "build_texture": QCheckBox("Build Texture", self),
-            "build_dem": QCheckBox("Build DEM", self),
-            "build_ortho": QCheckBox("Build Orthomosaic", self)
+        # Initialize checkboxes and combo boxes for building functions
+        self.building_functions = {}
+        self.building_combo_boxes = {}
+        
+        # Define options for each building function
+        build_options = {
+            "add_photos": [],
+            "align_cameras": ["lowest", "low", "medium", "high", "highest"],
+            "optimize_cameras": [],
+            "build_depth_maps": ["lowest", "low", "medium", "high", "highest"],
+            "build_point_cloud": [],
+            "build_mesh": ["low", "medium", "high"],
+            "build_texture": [],
+            "build_dem": [],
+            "build_ortho": []
         }
-
+        
+        # Create checkboxes and combo boxes
+        for function_name, options in build_options.items():
+            self.building_functions[function_name] = QCheckBox(function_name.replace('_', ' ').title(), self)
+            combo = QComboBox(self)
+            combo.addItems(options)
+            self.building_combo_boxes[function_name] = combo
+            
+            if function_name == "align_cameras":
+                combo.setCurrentText("medium")
+                
+            if function_name == "build_depth_maps":
+                combo.setCurrentText("medium")
+                
+            if function_name == "build_mesh":
+                combo.setCurrentText("medium")
+        
+        # Initialize export function checkboxes
         self.export_functions = {
             "export_viscore": QCheckBox("Export Viscore", self),
             "export_meta": QCheckBox("Export Meta", self),
@@ -230,28 +306,49 @@ class SfMWorkflowApp(QDialog):
             "export_report": QCheckBox("Export Report", self)
         }
         
-        # Functions Tab Widget
-        functions_tab = QTabWidget()
+        # Create horizontal layout for building functions and their options
+        functions_layout = QHBoxLayout()
         
-        # Building Tab
-        building_tab = QWidget()
+        # Options GroupBox - NEW
+        options_group = QGroupBox("Building Options")
+        options_layout = QFormLayout()
+        
+        # Add combo boxes to the options form layout
+        for function_name, combo_box in self.building_combo_boxes.items():
+            display_name = function_name.replace('_', ' ').title()
+            options_layout.addRow(f"{display_name}:", combo_box)
+        
+        options_group.setLayout(options_layout)
+        functions_layout.addWidget(options_group)
+        
+        # Building GroupBox
+        building_group = QGroupBox("Building Functions")
         building_layout = QVBoxLayout()
-        for checkbox in self.building_functions.values():
-            building_layout.addWidget(checkbox)
-        building_layout.addStretch()
-        building_tab.setLayout(building_layout)
-        functions_tab.addTab(building_tab, "Building")
         
-        # Export Tab
-        export_tab = QWidget()
+        # Add just the checkboxes to the building layout
+        for function_name, checkbox in self.building_functions.items():
+            building_layout.addWidget(checkbox)
+        
+        building_layout.addStretch()
+        building_group.setLayout(building_layout)
+        functions_layout.addWidget(building_group)
+        
+        # Export GroupBox
+        export_group = QGroupBox("Export Functions")
         export_layout = QVBoxLayout()
         for checkbox in self.export_functions.values():
             export_layout.addWidget(checkbox)
         export_layout.addStretch()
-        export_tab.setLayout(export_layout)
-        functions_tab.addTab(export_tab, "Export")
+        export_group.setLayout(export_layout)
+        functions_layout.addWidget(export_group)
         
-        sfm_layout.addWidget(functions_tab)
+        sfm_layout.addLayout(functions_layout)
+        
+        # Add points panel (moved from above)
+        sfm_layout.addWidget(self.create_points_panel())
+        # Add error reduction panel at the bottom (moved from above)
+        sfm_layout.addWidget(self.create_error_reduction_panel())
+        
         sfm_group.setLayout(sfm_layout)
         return sfm_group
 
@@ -262,6 +359,7 @@ class SfMWorkflowApp(QDialog):
         # Left Panel
         left_panel = QVBoxLayout()
         left_panel.addWidget(self.create_azure_panel())
+        left_panel.addWidget(self.create_io_panel())  # Add IO panel to the left side
         left_panel.addStretch()
         
         # Right Panel
@@ -410,8 +508,6 @@ class SfMWorkflowApp(QDialog):
             self.workspace_name = self.workspace_name_input.text()
             self.compute_name = self.computes_input.currentText()
 
-            self.device = int(self.device_input.value())
-
             # Method calls to get input / output strings
             self.input_dir = self.input_path_input.text()
             self.output_dir = self.output_path_input.text()
@@ -467,9 +563,14 @@ class SfMWorkflowApp(QDialog):
                 QMessageBox.critical(self, 'Error', "Output directory already exists!")
                 return
                 
-            self.quality = self.quality_input.currentText()
-            self.target_percentage = self.target_percentage_input.value()
+            self.device = int(self.device_input.value())
             self.detect_markers = self.detect_markers_input.currentText() == 'True'
+
+            self.reprojection_error = self.reprojection_error_input.value()
+            self.reconstruction_uncertainty = self.reconstruction_uncertainty_input.value()
+            self.projection_accuracy = self.projection_accuracy_input.value()
+            self.keypoint_limit = self.keypoint_limit_input.value()
+            self.tiepoint_limit = self.tiepoint_limit_input.value()
 
         except Exception as e:
             print(f"ERROR: {e}")
@@ -488,35 +589,50 @@ class SfMWorkflowApp(QDialog):
             # Make cursor busy
             QApplication.setOverrideCursor(Qt.WaitCursor)
             
-            workflow = SfMWorkflow(device=self.device,
-                                   input_dir=self.input_dir,
-                                   project_file="",
-                                   output_name=self.output_name,
-                                   output_dir=self.output_dir,
-                                   quality=self.quality,
-                                   target_percentage=self.target_percentage,
-                                   detect_markers=self.detect_markers,
-                                   add_photos=self.building_functions['add_photos'].isChecked(),
-                                   align_cameras=self.building_functions['align_cameras'].isChecked(),
-                                   optimize_cameras=self.building_functions['optimize_cameras'].isChecked(),
-                                   build_depth_maps=self.building_functions['build_depth_maps'].isChecked(),
-                                   build_point_cloud=self.building_functions['build_point_cloud'].isChecked(),
-                                   build_mesh=self.building_functions['build_mesh'].isChecked(),
-                                   build_texture=self.building_functions['build_texture'].isChecked(),
-                                   build_dem=self.building_functions['build_dem'].isChecked(),
-                                   build_ortho=self.building_functions['build_ortho'].isChecked(),
-                                   export_viscore=self.export_functions['export_viscore'].isChecked(),
-                                   export_meta=self.export_functions['export_meta'].isChecked(),
-                                   export_cameras=self.export_functions['export_cameras'].isChecked(),
-                                   export_point_cloud=self.export_functions['export_point_cloud'].isChecked(),
-                                   export_potree=self.export_functions['export_potree'].isChecked(),
-                                   export_mesh=self.export_functions['export_mesh'].isChecked(),
-                                   export_texture=self.export_functions['export_texture'].isChecked(),
-                                   export_dem=self.export_functions['export_dem'].isChecked(),
-                                   export_ortho=self.export_functions['export_ortho'].isChecked(),
-                                   export_report=self.export_functions['export_report'].isChecked())
+            # Create a dictionary of building function parameters
+            building_params = {}
+            for function_name, checkbox in self.building_functions.items():
+                if checkbox.isChecked():
+                    # Get the selected option from the corresponding combo box
+                    combo = self.building_combo_boxes[function_name]
+                    if combo.count() > 0:
+                        option = combo.currentText()
+                        building_params[function_name] = option
             
-            # Sucess message
+            # Pass main parameters to workflow
+            SfMWorkflow(device=self.device,
+                        input_dir=self.input_dir,
+                        project_file="",
+                        output_name=self.output_name,
+                        output_dir=self.output_dir,
+                        reprojection_error=self.reprojection_error,
+                        reconstruction_uncertainty=self.reconstruction_uncertainty,
+                        projection_accuracy=self.projection_accuracy,
+                        keypoint_limit=self.keypoint_limit,
+                        tiepoint_limit=self.tiepoint_limit,
+                        detect_markers=self.detect_markers,
+                        add_photos=self.building_functions['add_photos'].isChecked(),
+                        align_cameras=self.building_functions['align_cameras'].isChecked(),
+                        optimize_cameras=self.building_functions['optimize_cameras'].isChecked(),
+                        build_depth_maps=self.building_functions['build_depth_maps'].isChecked(),
+                        build_point_cloud=self.building_functions['build_point_cloud'].isChecked(),
+                        build_mesh=self.building_functions['build_mesh'].isChecked(),
+                        build_texture=self.building_functions['build_texture'].isChecked(),
+                        build_dem=self.building_functions['build_dem'].isChecked(),
+                        build_ortho=self.building_functions['build_ortho'].isChecked(),
+                        export_viscore=self.export_functions['export_viscore'].isChecked(),
+                        export_meta=self.export_functions['export_meta'].isChecked(),
+                        export_cameras=self.export_functions['export_cameras'].isChecked(),
+                        export_point_cloud=self.export_functions['export_point_cloud'].isChecked(),
+                        export_potree=self.export_functions['export_potree'].isChecked(),
+                        export_mesh=self.export_functions['export_mesh'].isChecked(),
+                        export_texture=self.export_functions['export_texture'].isChecked(),
+                        export_dem=self.export_functions['export_dem'].isChecked(),
+                        export_ortho=self.export_functions['export_ortho'].isChecked(),
+                        export_report=self.export_functions['export_report'].isChecked(),
+                        building_params=building_params)  # Pass the building parameters
+            
+            # Success message
             QMessageBox.information(self, 'Success', 'Workflow completed successfully!')
 
         except Exception as e:
@@ -582,17 +698,29 @@ class SfMWorkflowApp(QDialog):
                 f'--output_dir ${{outputs.output_data}}',
                 f'--output_name {self.output_name}',
                 f'--device {self.device_input.value()}',
-                f'--quality {self.quality_input.currentText()}',
-                f'--target_percentage {self.target_percentage_input.value()}',
+                f'--reprojection_error {self.reprojection_error_input.value()}',
+                f'--reconstruction_uncertainty {self.reconstruction_uncertainty_input.value()}',
+                f'--projection_accuracy {self.projection_accuracy_input.value()}',
+                f'--keypoint_limit {self.keypoint_limit_input.value()}',
+                f'--tiepoint_limit {self.tiepoint_limit_input.value()}',
             ]
 
             if self.detect_markers_input.currentText() == 'True':
                 command_args.append('--detect_markers')
 
+            # Add building functions with their options
             for function_name, checkbox in self.building_functions.items():
                 if checkbox.isChecked():
-                    command_args.append(f'--{function_name}')
+                    combo = self.building_combo_boxes[function_name]
+                    if combo.count() > 0 and combo.currentText():
+                        option = combo.currentText()
+                        # For functions with options, pass them as arguments
+                        command_args.append(f'--{function_name} {option}')
+                    else:
+                        # For functions without options, just add the flag
+                        command_args.append(f'--{function_name}')
 
+            # Add export functions
             for function_name, checkbox in self.export_functions.items():
                 if checkbox.isChecked():
                     command_args.append(f'--{function_name}')
@@ -612,7 +740,7 @@ class SfMWorkflowApp(QDialog):
             returned_job = self.ml_client.jobs.create_or_update(transfer_data)
             print(f"STATUS: {returned_job.studio_url}")
             
-            # Sucess message
+            # Success message
             QMessageBox.information(self, 'Success', 'Workflow submitted successfully!')
 
         except Exception as e:
@@ -639,6 +767,7 @@ def metashape_app():
 
 def main_function():
     app = QApplication(sys.argv)
+    qdarktheme.setup_theme("dark")
     dlg = SfMWorkflowApp()
     dlg.exec_()
 
@@ -646,9 +775,16 @@ def main_function():
 if __name__ == "__main__":
     try:
         import Metashape
-
-        label = "Scripts/Metashape-Azure"
-        Metashape.app.addMenuItem(label, metashape_app)
-        print("To execute this script press {}".format(label))
+        
+        # If second argument is 'main', run main_function instead
+        if len(sys.argv) > 1 and sys.argv[1] == 'app':
+            main_function()
+        else:
+            label = "Scripts/Metashape-Azure"
+            Metashape.app.addMenuItem(label, metashape_app)
+            print("To execute this script press {}".format(label))
+        
     except Exception as e:
-        main_function()
+        print("Failed to load Metashape module.")
+        print(f"ERROR: {e}")
+

@@ -115,6 +115,7 @@ def find_files(folder: str, types: list):
 # Classes
 # -----------------------------------------------------------------------------------------------------------
 
+
 class SfMWorkflow:
     def __init__(self,
                  device,
@@ -122,8 +123,11 @@ class SfMWorkflow:
                  project_file,
                  output_name,
                  output_dir,
-                 quality='high',
-                 target_percentage=10,
+                 reprojection_error=10,
+                 reconstruction_uncertainty=50,
+                 projection_accuracy=50,
+                 keypoint_limit=40000,
+                 tiepoint_limit=10000,
                  detect_markers=True,
                  add_photos=True,
                  align_cameras=True,
@@ -143,7 +147,11 @@ class SfMWorkflow:
                  export_texture=True,
                  export_dem=True,
                  export_ortho=True,
-                 export_report=True):
+                 export_report=True,
+                 
+                 building_params={'align_cameras': 'medium',
+                                  'build_depth_maps': 'medium',
+                                  'build_mesh': 'medium'}):
 
         # Ensure the license is activated
         self.borrow_license()
@@ -195,13 +203,19 @@ class SfMWorkflow:
             self.output_cameras = f"{self.output_dir}/{self.output_name}.cams.xml"
             self.output_meta = f"{self.output_dir}/{self.output_name}.meta.json"
 
-        # Validate and set the quality
-        self.quality = quality
-        self.validate_quality()
+        # Validate and set the building param (quality)
+        self.building_params = building_params
+        self.validate_building_params()
 
-        # Validate and set the target percentage
-        self.target_percentage = int(target_percentage)
-        self.validate_target_percentage()
+        # Validate and set the error reduction percentages
+        self.reprojection_error = reprojection_error
+        self.reconstruction_uncertainty = reconstruction_uncertainty
+        self.projection_accuracy = projection_accuracy
+        self.validate_error_reduction_params()
+        
+        # Set the keypoint and tiepoint limits
+        self.keypoint_limit = keypoint_limit
+        self.tiepoint_limit = tiepoint_limit
 
         # Detect markers
         self.detect_markers_flag = detect_markers
@@ -211,11 +225,11 @@ class SfMWorkflow:
 
         self.project_file = f"{self.output_name}.psx"
         if not os.path.exists(self.project_file):
-            print(f"NOTE: Creating new project file")
+            print("NOTE: Creating new project file")
             self.project_file = f"{self.output_dir}/{self.output_name}.psx"
             self.doc.save(self.project_file)
         else:
-            print(f"NOTE: Opening existing project file")
+            print("NOTE: Opening existing project file")
             self.doc.open(self.project_file,
                           read_only=False,
                           ignore_lock=True,
@@ -277,19 +291,25 @@ class SfMWorkflow:
         if not Metashape.License().valid:
             raise Exception("ERROR: Metashape License not valid on this machine")
 
-    def validate_quality(self):
+    def validate_building_params(self):
         """
 
         """
-        if self.quality.lower() not in ["lowest", "low", "medium", "high", "highest"]:
-            raise Exception(f"ERROR: Quality must be low, medium, or high")
+        for key in self.building_params.keys():
+            if key.lower() not in ["align_cameras", "build_depth_maps", "build_mesh"]:
+                raise Exception(f"ERROR: Invalid key {key}")
+            
+        for value in self.building_params.values():
+            if value.lower() not in ["lowest", "low", "medium", "high", "highest"]:
+                raise Exception(f"ERROR: Invalid value {value}")
 
-    def validate_target_percentage(self):
+    def validate_error_reduction_params(self):
         """
 
         """
-        if not isinstance(self.target_percentage, int) or not (0 <= self.target_percentage <= 100):
-            raise Exception("ERROR: Target percentage must be int between 0 and 100")
+        for val in [self.reprojection_error, self.reconstruction_uncertainty, self.projection_accuracy]:
+            if val < 0 or val > 100:
+                raise Exception(f"ERROR: Invalid percentage value {val}")
 
     def add_photos(self):
         """
@@ -303,7 +323,7 @@ class SfMWorkflow:
             photos = find_files(self.input_dir, [".jpg", ".jpeg", ".tiff", ".tif", ".png"])
 
             if not photos:
-                raise Exception(f"ERROR: Image directory provided does not contain any usable images")
+                raise Exception("ERROR: Image directory provided does not contain any usable images")
 
             announce("Adding photos")
             chunk.addPhotos(photos, progress=print_progress)
@@ -330,11 +350,11 @@ class SfMWorkflow:
                          "low": 4,
                          "medium": 2,
                          "high": 1,
-                         "highest": 0}[self.quality.lower()]
+                         "highest": 0}[self.building_params['align_cameras'].lower()]
 
             chunk.matchPhotos(
-                keypoint_limit=40000,
-                tiepoint_limit=10000,
+                keypoint_limit=self.keypoint_limit,  
+                tiepoint_limit=self.tiepoint_limit,
                 generic_preselection=True,
                 reference_preselection=True,
                 downscale=downscale,
@@ -357,28 +377,30 @@ class SfMWorkflow:
             announce("Performing camera optimization")
 
             points = chunk.tie_points.points
-            selections = [Metashape.TiePoints.Filter.ReprojectionError,
-                          Metashape.TiePoints.Filter.ReconstructionUncertainty,
-                          Metashape.TiePoints.Filter.ProjectionAccuracy,
-                          Metashape.TiePoints.Filter.ImageCount]
+            
+            # Error reduction
+            selections = {Metashape.TiePoints.Filter.ReprojectionError: self.reprojection_error,
+                          Metashape.TiePoints.Filter.ReconstructionUncertainty: self.reconstruction_uncertainty,
+                          Metashape.TiePoints.Filter.ProjectionAccuracy: self.projection_accuracy}
 
-            for s_idx, selection in enumerate(selections):
+            for selection, threshold in selections.items():
 
                 try:
+                    # Initialize the filter
                     f = Metashape.TiePoints.Filter()
+                    f.init(chunk, criterion=selection)
 
-                    if s_idx == 3:
-                        f.init(chunk, selection)
-                        f.removePoints(1)
-                    else:
-                        list_values = f.values
-                        list_values_valid = [list_values[i] for i in range(len(list_values)) if points[i].valid]
-                        list_values_valid.sort()
-                        target = int(len(list_values_valid) * self.target_percentage / 100)
-                        threshold = list_values_valid[target]
-                        f.selectPoints(threshold)
-                        f.removePoints(threshold)
-
+                    # Get the values
+                    list_values = f.values
+                    list_values_valid = [list_values[i] for i in range(len(list_values)) if points[i].valid]
+                    list_values_valid.sort()
+                    # Calculate the values to select based on provided threshold
+                    target = int(len(list_values_valid) * threshold / 100)
+                    threshold = list_values_valid[target]
+                    # Select and remove points
+                    f.selectPoints(threshold)
+                    f.removePoints(threshold)
+                    # Optimize the cameras given the removal of points
                     chunk.optimizeCameras(
                         fit_f=True, fit_cx=True, fit_cy=True, fit_b1=True, fit_b2=True,
                         fit_k1=True, fit_k2=True, fit_k3=True, fit_k4=True,
@@ -387,7 +409,7 @@ class SfMWorkflow:
                     )
 
                 except Exception as e:
-                    print(f"WARNING: Could not filter points based on selection method {s_idx}")
+                    print(f"WARNING: Could not filter points based on selection method {selection}")
 
             print("")
             print("Process Successful!")
@@ -405,7 +427,7 @@ class SfMWorkflow:
                          "low": 8,
                          "medium": 4,
                          "high": 2,
-                         "highest": 1}[self.quality.lower()]
+                         "highest": 1}[self.building_params['build_depth_maps'].lower()]
 
             chunk.buildDepthMaps(filter_mode=Metashape.MildFiltering,
                                  downscale=downscale,
@@ -437,9 +459,13 @@ class SfMWorkflow:
 
         if chunk.point_cloud and not chunk.model:
             announce("Building mesh")
+            face_count = {"low": Metashape.FaceCount.LowFaceCount,
+                          "medium": Metashape.FaceCount.MediumFaceCount,
+                          "high": Metashape.FaceCount.HighFaceCount}[self.building_params['build_mesh'].lower()]
+            
             chunk.buildModel(surface_type=Metashape.Arbitrary,
                              interpolation=Metashape.EnabledInterpolation,
-                             face_count=Metashape.HighFaceCount,
+                             face_count=face_count,
                              source_data=Metashape.PointCloudData,
                              progress=print_progress)
             print("")
@@ -799,15 +825,23 @@ def main():
     parser.add_argument('--device', type=int, default=0,
                         help='GPU device index (default: 0)')
 
-    parser.add_argument('--quality', type=str, default='medium',
-                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
-                        help='Quality of the workflow (default: medium)')
-
-    parser.add_argument('--target_percentage', type=int, default=10,
-                        help='Target percentage for optimization (default: 10)')
-
     parser.add_argument('--detect_markers', action='store_true',
                         help='Detect markers in photos')
+    
+    parser.add_argument('--reprojection_error', type=int, default=10,
+                        help='Reprojection error threshold percentage (default: 10)')
+                    
+    parser.add_argument('--reconstruction_uncertainty', type=int, default=50,
+                        help='Reconstruction uncertainty threshold percentage (default: 50)')
+                    
+    parser.add_argument('--projection_accuracy', type=int, default=50,
+                        help='Projection accuracy threshold percentage (default: 50)')
+
+    parser.add_argument('--keypoint_limit', type=int, default=40000,
+                        help='Keypoint limit for photo matching (default: 40000)')
+                        
+    parser.add_argument('--tiepoint_limit', type=int, default=10000,
+                        help='Tiepoint limit for photo matching (default: 10000)')
 
     parser.add_argument('--add_photos', action='store_true',
                         help='Add photos to the project')
@@ -865,37 +899,60 @@ def main():
 
     parser.add_argument('--export_report', action='store_true',
                         help='Export report')
-
+    
+    parser.add_argument('--align_cameras_quality', type=str, default='medium',
+                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
+                        help='Quality for aligning cameras (default: medium)')
+    
+    parser.add_argument('--build_depth_maps_quality', type=str, default='medium',
+                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
+                        help='Quality for building depth maps (default: medium)')
+    
+    parser.add_argument('--build_mesh_quality', type=str, default='medium',
+                        choices=['low', 'medium', 'high'],
+                        help='Quality for building mesh (default: medium)')
+    
     args = parser.parse_args()
 
+    # Construct building_params dictionary from command-line arguments
+    building_params = {
+        'align_cameras': args.align_cameras_quality,
+        'build_depth_maps': args.build_depth_maps_quality,
+        'build_mesh': args.build_mesh_quality
+    }
+    
     try:
-        workflow = SfMWorkflow(device=args.device,
-                               input_dir=args.input_dir,
-                               project_file=args.project_file,
-                               output_name=args.output_name,
-                               output_dir=args.output_dir,
-                               quality=args.quality,
-                               target_percentage=args.target_percentage,
-                               detect_markers=args.detect_markers,
-                               add_photos=args.add_photos,
-                               align_cameras=args.align_cameras,
-                               optimize_cameras=args.optimize_cameras,
-                               build_depth_maps=args.build_depth_maps,
-                               build_point_cloud=args.build_point_cloud,
-                               build_mesh=args.build_mesh,
-                               build_texture=args.build_texture,
-                               build_dem=args.build_dem,
-                               build_ortho=args.build_ortho,
-                               export_viscore=args.export_viscore,
-                               export_meta=args.export_meta,
-                               export_cameras=args.export_cameras,
-                               export_point_cloud=args.export_point_cloud,
-                               export_potree=args.export_potree,
-                               export_mesh=args.export_mesh,
-                               export_texture=args.export_texture,
-                               export_dem=args.export_dem,
-                               export_ortho=args.export_ortho,
-                               export_report=args.export_report)
+        SfMWorkflow(device=args.device,
+                    input_dir=args.input_dir,
+                    project_file=args.project_file,
+                    output_name=args.output_name,
+                    output_dir=args.output_dir,
+                    detect_markers=args.detect_markers,
+                    reprojection_error=args.reprojection_error,
+                    reconstruction_uncertainty=args.reconstruction_uncertainty,
+                    projection_accuracy=args.projection_accuracy,
+                    keypoint_limit=args.keypoint_limit,
+                    tiepoint_limit=args.tiepoint_limit,
+                    add_photos=args.add_photos,
+                    align_cameras=args.align_cameras,
+                    optimize_cameras=args.optimize_cameras,
+                    build_depth_maps=args.build_depth_maps,
+                    build_point_cloud=args.build_point_cloud,
+                    build_mesh=args.build_mesh,
+                    build_texture=args.build_texture,
+                    build_dem=args.build_dem,
+                    build_ortho=args.build_ortho,
+                    export_viscore=args.export_viscore,
+                    export_meta=args.export_meta,
+                    export_cameras=args.export_cameras,
+                    export_point_cloud=args.export_point_cloud,
+                    export_potree=args.export_potree,
+                    export_mesh=args.export_mesh,
+                    export_texture=args.export_texture,
+                    export_dem=args.export_dem,
+                    export_ortho=args.export_ortho,
+                    export_report=args.export_report,
+                    building_params=building_params)
     except Exception as e:
         print(f"ERROR: {e}")
         print(traceback.print_exc())
