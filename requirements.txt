@@ -1,7 +1,7 @@
 numpy==1.24.4
 pyqt5==5.15.2
-azure-identity
-azure-ai-ml
-azure-cli
+azure-ai-ml>=1.20.0
+azure-cli>=2.64.0
+azure-identity>=1.17.1
 pyqtdarktheme
 https://download.agisoft.com/Metashape-2.1.2-cp37.cp38.cp39.cp310.cp311-none-win_amd64.whl
