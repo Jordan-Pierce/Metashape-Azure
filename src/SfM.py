@@ -846,20 +846,23 @@ def main():
     parser.add_argument('--add_photos', action='store_true',
                         help='Add photos to the project')
 
-    parser.add_argument('--align_cameras', action='store_true',
-                        help='Align cameras')
+    parser.add_argument('--align_cameras', type=str, nargs='?', const='medium',
+                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
+                        help='Align cameras with specified quality (default: medium)')
 
     parser.add_argument('--optimize_cameras', action='store_true',
                         help='Optimize cameras')
 
-    parser.add_argument('--build_depth_maps', action='store_true',
-                        help='Build depth maps')
+    parser.add_argument('--build_depth_maps', type=str, nargs='?', const='medium',
+                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
+                        help='Build depth maps cameras with specified quality (default: medium)')
 
     parser.add_argument('--build_point_cloud', action='store_true',
                         help='Build point cloud')
 
-    parser.add_argument('--build_mesh', action='store_true',
-                        help='Build mesh')
+    parser.add_argument('--build_mesh', type=str, nargs='?', const='medium',
+                        choices=['low', 'medium', 'high'],
+                        help='Build mesh with specified quality (default: medium)')
 
     parser.add_argument('--build_texture', action='store_true',
                         help='Build texture')
@@ -899,18 +902,6 @@ def main():
 
     parser.add_argument('--export_report', action='store_true',
                         help='Export report')
-    
-    parser.add_argument('--align_cameras_quality', type=str, default='medium',
-                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
-                        help='Quality for aligning cameras (default: medium)')
-    
-    parser.add_argument('--build_depth_maps_quality', type=str, default='medium',
-                        choices=['lowest', 'low', 'medium', 'high', 'highest'],
-                        help='Quality for building depth maps (default: medium)')
-    
-    parser.add_argument('--build_mesh_quality', type=str, default='medium',
-                        choices=['low', 'medium', 'high'],
-                        help='Quality for building mesh (default: medium)')
     
     args = parser.parse_args()
 
@@ -953,6 +944,7 @@ def main():
                     export_ortho=args.export_ortho,
                     export_report=args.export_report,
                     building_params=building_params)
+        
     except Exception as e:
         print(f"ERROR: {e}")
         print(traceback.print_exc())

@@ -597,6 +597,8 @@ class SfMWorkflowApp(QDialog):
                     combo = self.building_combo_boxes[function_name]
                     if combo.count() > 0:
                         option = combo.currentText()
+                    
+                        # If the box isn't selected, it won't matter what the option is
                         building_params[function_name] = option
             
             # Pass main parameters to workflow
