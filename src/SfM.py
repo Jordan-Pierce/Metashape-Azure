@@ -907,9 +907,9 @@ def main():
 
     # Construct building_params dictionary from command-line arguments
     building_params = {
-        'align_cameras': args.align_cameras_quality,
-        'build_depth_maps': args.build_depth_maps_quality,
-        'build_mesh': args.build_mesh_quality
+        'align_cameras': args.align_cameras if args.align_cameras else 'medium',
+        'build_depth_maps': args.build_depth_maps if args.build_depth_maps else 'medium',
+        'build_mesh': args.build_mesh if args.build_mesh else 'medium'
     }
     
     try:
