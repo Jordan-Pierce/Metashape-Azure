@@ -746,8 +746,10 @@ class SfMWorkflowApp(QDialog):
             QMessageBox.information(self, 'Success', 'Workflow submitted successfully!')
 
         except Exception as e:
+            QMessageBox.critical(self, 
+                                 'Error', 
+                                 'Failed to submit the job to the compute. Please check the parameters and try again.')
             print(f"ERROR: {e}")
-            print(f"Failed to run all processes in the workflow on Azure!")
             traceback.print_exc()
         
         finally:
