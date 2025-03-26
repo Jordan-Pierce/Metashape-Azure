@@ -1,5 +1,7 @@
 # Metashape Azure
 
+### Installing 
+
 ```bash
 # cmd
 
@@ -24,6 +26,16 @@ command:
 # cmd
 
 metashape-azure-mls
+```
+
+### Updating
+
+```bash
+# cmd
+
+conda activate sfm
+
+pip install -U "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
 ```
 
 <p align="center">
