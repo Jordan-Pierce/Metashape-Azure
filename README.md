@@ -38,11 +38,11 @@ conda activate sfm
 pip install -U "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
 ```
 
+### Running the Application
+
 <p align="center">
   <img src="figures/GUI.PNG" alt="Metashape-Azure-MLS">
 </p>
-
-### Running the Application
 
 1. Open [Azure Machine Learning Studio](https://ml.azure.com/) in Microsoft Edge and login
 2. Navigate to your workspace
