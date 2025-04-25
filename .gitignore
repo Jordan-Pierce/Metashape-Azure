@@ -5,3 +5,4 @@ config.json
 Notebooks
 packages
 *.egg-info
+*.pyc
