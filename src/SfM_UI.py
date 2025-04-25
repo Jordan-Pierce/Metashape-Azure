@@ -672,23 +672,23 @@ class SfMWorkflowApp(QDialog):
 
             # load in the input data information from the function def
             input_dir = self.input_dir
-            input_mode = InputOutputModes.DOWNLOAD
+            input_mode = InputOutputModes.RO_MOUNT  # DOWNLOAD
 
             # load in the output data info from the function def
             output_dir = f"{self.output_dir}/{self.output_name}"
-            output_mode = InputOutputModes.UPLOAD
+            output_mode = InputOutputModes.RW_MOUNT  # UPLOAD
 
             # get a local instance of the compute info
             compute = self.ml_client.compute.get(self.compute_name)
 
             # create input and output dictionaries to use in the command calls later
             input = {
-                "input_data": Input(type=AssetTypes.RO_MOUNT,    # URI_FOLDER,
+                "input_data": Input(type=AssetTypes.URI_FOLDER,
                                     path=input_dir,
                                     mode=input_mode)
             }
             output = {
-                "output_data": Output(type=AssetTypes.RW_MOUNT,  # URI_FOLDER,
+                "output_data": Output(type=AssetTypes.URI_FOLDER,
                                       path=output_dir,
                                       mode=output_mode)
             }
