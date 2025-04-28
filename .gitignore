@@ -5,4 +5,5 @@ config.json
 Notebooks
 packages
 *.egg-info
-*.pyc
+src/*.pyc
+src/__pycache__/
