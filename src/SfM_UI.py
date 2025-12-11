@@ -438,9 +438,9 @@ class SfMWorkflowApp(QDialog):
     def save_credentials(self):
         """Method to handle saving the credentials when the 'Save Credentials' button is pressed."""
         credentials = {
-            "subscription_id": self.subscription_id_input.text(),
-            "resource_group": self.resource_group_input.text(),
-            "workspace_name": self.workspace_name_input.text(),
+            "subscription_id": self.subscription_id_input.text().strip('\x00'),
+            "resource_group": self.resource_group_input.text().strip('\x00'),
+            "workspace_name": self.workspace_name_input.text().strip('\x00'),
         }
         os.makedirs(os.path.dirname(self.config_path), exist_ok=True)
         with open(self.config_path, "w") as config_file:
