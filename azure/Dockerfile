@@ -29,7 +29,8 @@ RUN wget https://download.agisoft.com/Metashape-2.2.3-cp37.cp38.cp39.cp310.cp311
 COPY requirements.txt /home/metashape/
 
 # Install dependencies
-RUN python3 -m pip install --user -r requirements.txt && \
+RUN python3 -m pip install --user Metashape-2.2.3-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl && \
+    python3 -m pip install --user -r requirements.txt && \
     rm -f requirements.txt && \
     rm -f Metashape-2.2.3-cp37.cp38.cp39.cp310.cp311-abi3-linux_x86_64.whl && \
     pip list
