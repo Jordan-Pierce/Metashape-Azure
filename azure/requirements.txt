@@ -1,0 +1,7 @@
+numpy==1.24.4
+azure-ai-ml==1.18.0
+azure-identity==1.19.0
+mldesigner==0.1.0b18
+azureml==0.2.7
+azureml-core==1.59.0
+azureml-dataprep==5.3.1
