@@ -10,6 +10,7 @@ RUN apt update && \
         libglu1-mesa \
         libgl1-mesa-glx \
         libcurl4 \
+        libvulkan1 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN wget http://es.archive.ubuntu.com/ubuntu/pool/main/libf/libffi/libffi7_3.3-4_amd64.deb 
@@ -44,6 +45,3 @@ ENV INPUT_DIR=/home/metashape/input
 
 # Copy the config file
 COPY config.ini /home/metashape/
-
-# Test license server connectivity at build time with a clear success/failure message.
-RUN python3 -c "import socket; s=socket.socket(); s.settimeout(3); s.connect(('10.71.68.13', 5842))" && echo "SUCCESS: Metashape license server reachable at 10.71.68.13:5842" || { echo "FAILURE: Metashape license server unreachable at 10.71.68.13:5842"; exit 1; }
