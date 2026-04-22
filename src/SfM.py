@@ -28,7 +28,7 @@ except Exception as e:
     raise Exception(f'ERROR: {e}')
 
 # Check that the Metashape version is compatible with this script
-compatible_version = version.parse("2.1.2")
+compatible_version = version.parse("2.2.3")
 found_version = version.parse(str(Metashape.app.version))
 
 if found_version < compatible_version:
