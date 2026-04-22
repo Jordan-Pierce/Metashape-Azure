@@ -24,15 +24,6 @@ from azure.ai.ml import MLClient, Input, Output, command
 from azure.ai.ml.constants import AssetTypes, InputOutputModes
 from azure.identity import InteractiveBrowserCredential
 
-try:
-    # Import the SfM script from the local directory
-    from src.SfM import SfMWorkflow
-    icon_src = "src"
-except:
-    # Import the SfM script from the local directory
-    from SfM import SfMWorkflow
-    icon_src = ""
-
 
 # ----------------------------------------------------------------------------------------------------------------------
 # Functions
@@ -44,7 +35,13 @@ def get_icon_path(icon_name):
 
     :param icon_name:
     :return:
-    """
+    """    
+    # Check the icon source
+    icon_src = os.path.dirname(os.path.abspath(__file__))
+    
+    if os.path.exists(os.path.join(icon_src, 'icons', icon_name)):
+        return os.path.join(icon_src, 'icons', icon_name)
+        
     return pkg_resources.resource_filename(icon_src, f'icons/{icon_name}')
 
 
@@ -578,6 +575,14 @@ class SfMWorkflowApp(QDialog):
 
     def run_workflow_locally(self):
         """Method to run the SfM workflow locally."""
+
+        try:
+            # Import the SfM script from the local directory
+            from src.SfM import SfMWorkflow
+        except:
+            # Import the SfM script from the local directory
+            from SfM import SfMWorkflow
+    
         try:
             self.prepare_workflow()
         except Exception as e:
