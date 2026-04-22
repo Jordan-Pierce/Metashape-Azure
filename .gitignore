@@ -3,7 +3,6 @@
 notes.txt
 config.json
 Notebooks
-packages
 *.egg-info
 src/*.pyc
 src/__pycache__/

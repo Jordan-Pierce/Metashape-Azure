@@ -8,18 +8,16 @@
 conda create --name sfm python=3.8 -y
 conda activate sfm
 
-pip install "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
-```
+pip install uv 
 
-If you are also running Metashape `locally`, you will need to run the `install.py` script as well:
+uv pip install "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
+```
+> Fallback: if you get an error related to `--prerelease=allow`, run the command below
 
 ```bash
-# cmd
-
-python install.py
+uv pip install "git+https://github.com/Jordan-Pierce/Metashape-Azure.git" --prerelease=allow
 ```
-
-This will add dependencies to the `Metashape` python environment. Finally, to run the application, use the following 
+Finally, to run the application, use the following 
 command:
 
 ```bash
@@ -35,7 +33,7 @@ metashape-azure-mls
 
 conda activate sfm
 
-pip install -U "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
+uv pip install -U "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
 ```
 
 ### Running the Application
@@ -66,4 +64,5 @@ pip install -U "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
 
 - Azure Machine Learning Studio and Authentication must be done in `Microsoft Edge`
 - You must be connected to the network (i.e., `VPN`) to access the `Azure` services.
-
+- Currently using python 3.8, and [Metashape 2.2.3](https://www.agisoft.com/pdf/metashape_python_api_2_2_3.pdf)
+- See [here](https://gist.github.com/HowcanoeWang/6bc1fc5e29fb5af8a1cef6251f25375a) for older versions of Metashape Python API wheels 

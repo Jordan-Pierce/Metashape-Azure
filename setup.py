@@ -10,7 +10,6 @@ with open('requirements.txt') as f:
 
 # Filter out any empty lines or comments
 required_packages = [line for line in required_packages if line and not line.startswith('#')]
-required_packages = [line for line in required_packages if not line.startswith("https://")]
 
 # Setup
 setup(
@@ -21,9 +20,7 @@ setup(
     author='Jordan Pierce, Ben Wade',
     author_email='jordan.pierce@noaa.gov, ben.wade@noaa.gov',
     packages=find_packages(),
-    install_requires=required_packages + [
-        "metashape @ https://download.agisoft.com/Metashape-2.1.2-cp37.cp38.cp39.cp310.cp311-none-win_amd64.whl"
-    ],
+    install_requires=required_packages,
     python_requires='>=3.8',
     entry_points={
         "console_scripts": [
