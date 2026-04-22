@@ -65,4 +65,15 @@ uv pip install -U "git+https://github.com/Jordan-Pierce/Metashape-Azure.git"
 - Azure Machine Learning Studio and Authentication must be done in `Microsoft Edge`
 - You must be connected to the network (i.e., `VPN`) to access the `Azure` services.
 - Currently using python 3.8, and [Metashape 2.2.3](https://www.agisoft.com/pdf/metashape_python_api_2_2_3.pdf)
-- See [here](https://gist.github.com/HowcanoeWang/6bc1fc5e29fb5af8a1cef6251f25375a) for older versions of Metashape Python API wheels 
+- See [here](https://gist.github.com/HowcanoeWang/6bc1fc5e29fb5af8a1cef6251f25375a) for older versions of Metashape Python API wheels
+
+### Linux environments
+
+To ensure you can run Metashape on a Linux distro (e.g., Ubuntu), please ensure you do the following:
+```bash
+echo 'export AGISOFT_FLS=10.71.68.13:5842' >> ~/.bashrc && source ~/.bashrc
+
+sudo apt install libglu1-mesa libgl1-mesa-glx libcurl4
+```
+
+Then you should be able to run `python` in the terminal, import `Metashape` and see that the license was pulled.
